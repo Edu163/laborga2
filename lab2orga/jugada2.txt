@@ -1,0 +1,10 @@
+#Definicion de jugadores
+addi $s5, $zero, 1 #Jugador con X
+addi $s6, $zero, 2 #Jugador con O
+addi $s7, $s6, 100
+addi $s7, $s6, 100
+addi $s7, $s6, 100
+addi $s6, $s6, 100
+addi $s6, $s6, 100
+addi $s6, $s6, 100
+addi $s6, $s6, 100

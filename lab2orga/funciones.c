@@ -4,12 +4,12 @@
 //PIPELINE
 void pipeline()
 {
-	//SetRegistros* regSet = (SetRegistros*)malloc(sizeof(SetRegistros));
-	//regSet = inicializarRegistros();
+	SetRegistros* regSet = (SetRegistros*)malloc(sizeof(SetRegistros));
+	regSet = inicializarRegistros();
 	//imprimirRegistros(regSet);
 	SetInstrucciones* inSet = (SetInstrucciones*)malloc(sizeof(SetInstrucciones));
 	Programa* programa = (Programa*)malloc(sizeof(Programa));
-	programa = cargarPrograma("jugada1.txt");
+	programa = cargarPrograma("jugada2.txt");
 	inSet = cargarProgramaAMemoria(programa);
 	//imprimirInstrucciones(inSet);
 	Instruccion* pipeline = (Instruccion*)malloc(sizeof(Instruccion)*4);
@@ -18,6 +18,7 @@ void pipeline()
 	instruccion->rs = (char*)malloc(sizeof(char)*8);
 	instruccion->rt = (char*)malloc(sizeof(char)*8);
 	instruccion->rd = (char*)malloc(sizeof(char)*8);
+	//Buffer* buffer = (Buffer*)malloc(sizeof(Buffer)*4);
 	for(int i = 0; i<4; i++)
 	{
 			pipeline[i].op = (char*)malloc(sizeof(char)*8);
@@ -33,10 +34,17 @@ void pipeline()
 	int direccion = 0;
 	int ciclosReloj = 1;
 	strcpy(instruccion->op,"NOP");
+	char* funct = (char*)malloc(sizeof(char)*8);
+	int resultado = 0;
+	printf("%s\n","                    IF                 ID                EX                MM                WB" );
 	while(pipelineVacio(pipeline) != 1|| direccion<inSet->largo)
 	{
 		avanzarInstrucciones(pipeline,instruccion);
+		//avanzarBuffer(buffer, resultado);
 		instruccion = instructionFetch(inSet,direccion);
+		funct = instructionDecode(&pipeline[0]);
+		resultado = executeInstruction(&pipeline[1],regSet);
+		writeBack(&pipeline[3], regSet);
 		if(ciclosReloj<10)
 		{
 			printf("%d)  ",ciclosReloj);
@@ -45,6 +53,8 @@ void pipeline()
 		{
 			printf("%d) ",ciclosReloj);
 		}
+		printf("  %s |", funct);
+		printf("%  d |",resultado);
 		imprimirUnaInstruccion(instruccion);
 		printf(" ");
 		printEtapasPL(pipeline);
@@ -52,6 +62,7 @@ void pipeline()
 		direccion++;
 		ciclosReloj++;
 	}
+	imprimirRegistros(regSet);
 
 }
 //PUEDE GENERAR ERROR AL NO DAR ESPACIO PARA LAS DEMAS VARIABLES
@@ -66,13 +77,21 @@ Instruccion* instructionFetch(SetInstrucciones* memoria, int direccionPC)
 	}
 	return obtenerInstruccion(direccionPC,memoria);
 }
-
+//Se hace avanzar el pipeline de instrucciones
 void avanzarInstrucciones(Instruccion* pipeline,Instruccion* instruccion)
 {
 	pipeline[3] = pipeline[2];
 	pipeline[2] = pipeline[1];
 	pipeline[1] = pipeline[0];
 	pipeline[0] = *instruccion;
+}
+//Se hace avanzar el buffer con los datos
+void avanzarBuffer(Buffer* buffer, int valor)
+{
+	buffer[3].valor = buffer[2].valor;
+	buffer[2].valor = buffer[1].valor;
+	buffer[1].valor = buffer[0].valor;
+	buffer[0].valor = valor;
 }
 //Imprimir las multiples etapas
 void printEtapasPL(Instruccion* pipeline)
@@ -129,11 +148,135 @@ void imprimirUnaInstruccion(Instruccion* instruccion)
 			printf("%d ",instruccion->constante);
 		}
 }
+//Retorna 1 o 0 dependiendo si el pipeline esta vacio o no (sin instrucciones que ejecutar)
 int pipelineVacio(Instruccion* pipeline)
 {
 	if(strcmp(pipeline[0].op,"NOP")==0 && strcmp(pipeline[1].op,"NOP")==0 && strcmp(pipeline[2].op,"NOP")==0 && strcmp(pipeline[3].op,"NOP")==0)
 	{
 		return 1;
+	}
+	return 0;
+}
+//ALU unidad de calculo aritmetico
+int alu(Instruccion* in,SetRegistros* regSet){
+ 	Registro* rs = (Registro*)malloc(sizeof(Registro));
+	Registro* rt = (Registro*)malloc(sizeof(Registro));
+ 	char* funct = (char*)malloc(sizeof(char)*8);
+	int constante;
+	int resultado;
+	strcpy(funct, in->op);
+ 	if(strcmp(funct,"addi")==0)
+	{
+		rt = buscarRegistro(regSet, in->rt);
+		rs = buscarRegistro(regSet, in->rs);
+		constante = in->constante;
+		resultado = rs->valor + constante;
+		return resultado;
+	}
+	//CONTROL SIGNAL EX AND WB
+	else if(strcmp(funct,"subi")==0)
+	{
+		rt = buscarRegistro(regSet, in->rt);
+		rs = buscarRegistro(regSet, in->rs);
+		constante = in->constante;
+		resultado = rs->valor - constante;
+		return resultado;
+	}
+	//CONTROL SIGNAL EX AND MEM 
+	else if(strcmp(funct,"sw")==0)
+	{
+		rt = buscarRegistro(regSet, in->rt);
+		rs = buscarRegistro(regSet, in->rs);
+		resultado = in->constante;
+		return resultado/4;
+	}
+	return 0;
+}
+//INSTRUCTION DECODE
+char* instructionDecode(Instruccion* instruccion)
+{
+	char* tipo = (char*)malloc(sizeof(char)*6);
+	if(strcmp(instruccion->op,"addi")==0||strcmp(instruccion->op,"subi")==0||strcmp(instruccion->op,"addiu")==0
+		||strcmp(instruccion->op,"add")==0||strcmp(instruccion->op,"sub")==0||strcmp(instruccion->op,"mul")==0
+		||strcmp(instruccion->op,"div")==0)
+	{
+		strcpy(tipo,"AI");
+		return tipo;
+	}
+	if(strcmp(instruccion->op,"add")==0||strcmp(instruccion->op,"sub")==0||strcmp(instruccion->op,"mul")==0
+		||strcmp(instruccion->op,"div")==0)
+	{
+		strcpy(tipo,"AR");
+		return tipo;
+	}
+	else if(strcmp(instruccion->op,"bgt")==0||strcmp(instruccion->op,"beq")==0||strcmp(instruccion->op,"blt")==0)
+	{
+		strcpy(tipo,"branch");
+		return tipo;
+	}
+	else if(strcmp(instruccion->op,"j")==0||strcmp(instruccion->op,"jal")==0||strcmp(instruccion->op,"jr")==0)
+	{
+		strcpy(tipo,"jump");
+		return tipo;
+	}
+	else if(strcmp(instruccion->op,"sw")==0)
+	{
+		strcpy(tipo,"store");
+		return tipo;
+	}
+	else if(strcmp(instruccion->op,"lw")==0)
+	{
+		strcpy(tipo,"load");
+		return tipo;
+	}
+	else
+	{
+		strcpy(tipo,"NOP");
+		return tipo;
+	}
+}
+//EXECUTE INSTRUCTION
+int executeInstruction(Instruccion* instruccion, SetRegistros* regSet)
+{
+	int resultado;
+	resultado = alu(instruccion,regSet);
+	instruccion->valor = resultado;
+	return resultado;
+}
+//MEM
+void memoryAcces()
+{
+
+}
+//WRITE BACK
+void writeBack(Instruccion* instruccion, SetRegistros* regSet)
+{
+	//Registro* rs = (Registro*)malloc(sizeof(Registro));
+	Registro* rt = (Registro*)malloc(sizeof(Registro));
+	Registro* rd = (Registro*)malloc(sizeof(Registro));
+	char* tipo = (char*)malloc(sizeof(char)*8);
+	tipo = instructionDecode(instruccion);
+	if(strcmp(tipo,"AI")==0)
+	{
+		rt = buscarRegistro(regSet, instruccion->rt);
+		rt->valor = instruccion->valor;
+	}
+	else if(strcmp(tipo,"AR")==0)
+	{
+		rd = buscarRegistro(regSet, instruccion->rd);
+		rd->valor = instruccion->valor;
+	}
+}
+//HAZARD DETECT UNIT
+int unidadDeteccionRiesgos(Instruccion* ins1, Instruccion* ins2)
+{
+	char* tipoIns1 = (char*)malloc(sizeof(char)*8);
+	char* tipoIns2 = (char*)malloc(sizeof(char)*8);
+	tipoIns1 = instructionDecode(ins1);
+	tipoIns2 = instructionDecode(ins2);
+	if(strcmp(ins2->rs,ins1->rd))
+	{
+
 	}
 	return 0;
 }
@@ -431,9 +574,9 @@ Programa* elminarComentarios(Programa* inst)
 SetInstrucciones* cargarProgramaAMemoria(Programa* programa)
 {
 	SetInstrucciones* inSetInvertido = (SetInstrucciones*)malloc(sizeof(SetInstrucciones));
-	SetInstrucciones* inSet = (SetInstrucciones*)malloc(sizeof(SetInstrucciones));
+	//SetInstrucciones* inSet = (SetInstrucciones*)malloc(sizeof(SetInstrucciones));
 	Instruccion* instruccion = (Instruccion*)malloc(sizeof(Instruccion));
-	Instruccion* instruccionAux = (Instruccion*)malloc(sizeof(Instruccion));
+	//Instruccion* instruccionAux = (Instruccion*)malloc(sizeof(Instruccion));
 	char** part = (char**)malloc(sizeof(char*)*5);
 	for(int i = programa->largo-1; i >= 0; i--)
 	{

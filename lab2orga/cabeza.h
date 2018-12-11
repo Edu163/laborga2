@@ -18,8 +18,13 @@ typedef struct Instruccion
 	char* rt;
 	char* rd;
 	int  constante;
+	int valor;
 	struct Instruccion* siguiente;
 }Instruccion;
+typedef struct Buffer
+{
+	int valor;
+}Buffer;
 //Almacena todas las instrucciones
 typedef struct SetInstrucciones{
 	Instruccion* cabeza;
@@ -68,9 +73,16 @@ void removeChar(char *str, char garbage);
 void concatChar(char* str, char c);
 Instruccion* instructionFetch(SetInstrucciones* memoria, int direccionPC);
 void avanzarInstrucciones(Instruccion* pipeline,Instruccion* instruccion);
+void avanzarBuffer(Buffer* buffer, int valor);
 
 void pipeline();
 void printEtapasPL(Instruccion* pipeline);
 int pipelineVacio(Instruccion* pipeline);
+//ETAPAS
+int alu(Instruccion* in,SetRegistros* regSet);
+int unidadDeteccionRiesgos(Instruccion* ins1, Instruccion* ins2);
+char* instructionDecode(Instruccion* instruccion);
+int executeInstruction(Instruccion* instruccion, SetRegistros* regSet);
+void writeBack(Instruccion* instruccion, SetRegistros* regSet);
 #endif
 
