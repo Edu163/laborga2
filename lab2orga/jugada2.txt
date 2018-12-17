@@ -1,10 +1,9 @@
-#Definicion de jugadores
-addi $s5, $zero, 1 #Jugador con X
-addi $s6, $zero, 2 #Jugador con O
-addi $s7, $s6, 100
-addi $s7, $s6, 100
-addi $s7, $s6, 100
-addi $s6, $s6, 100
-addi $s6, $s6, 100
-addi $s6, $s6, 100
-addi $s6, $s6, 100
+addi $s0, $zero, -10
+addi $sp, $sp, -4
+sw $s0, 0($sp)
+lw $s1, 0($sp)
+j foward
+addi $s0, $zero, -10
+addi $sp, $sp, -4
+sw $s0, 0($sp)
+lw $s1, 0($sp)

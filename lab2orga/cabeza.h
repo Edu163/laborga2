@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
+int* stackPointer;
 //Almacena todas las instrucciones de un programa
 typedef struct Programa{
 	char** matrizInstrucciones;
@@ -17,6 +17,7 @@ typedef struct Instruccion
 	char* rs;
 	char* rt;
 	char* rd;
+	char* etiqueta;
 	int  constante;
 	int valor;
 	struct Instruccion* siguiente;
@@ -47,6 +48,22 @@ typedef struct SetRegistros{
 	int largo;
 	//int indice;
 }SetRegistros;
+typedef struct Riesgo
+{
+	char* nombre;
+	char* registro;
+	int linea;
+	int ciclo;
+	struct Riesgo* siguiente;
+}Riesgo;
+
+//Almacena la cabeza de los registros
+typedef struct SetRiesgos{
+	Riesgo* cabeza;
+	int largo;
+	//int indice;
+}SetRiesgos;
+
 
 void insertarInstruccion2(SetInstrucciones* inSet,char** linea);
 void insertarInstruccion(SetInstrucciones* inSet,Instruccion* in);
@@ -79,10 +96,18 @@ void pipeline();
 void printEtapasPL(Instruccion* pipeline);
 int pipelineVacio(Instruccion* pipeline);
 //ETAPAS
-int alu(Instruccion* in,SetRegistros* regSet);
-int unidadDeteccionRiesgos(Instruccion* ins1, Instruccion* ins2);
+int alu(Instruccion* in,SetRegistros* regSet,Programa* programa);
+int buscarEtiqueta(char* etiqueta, Programa* programa);
+Riesgo* unidadDeteccionRiesgos(SetRegistros* regSet, Instruccion* pipeline,int linea, int CC);
+Riesgo* EXHazard(Instruccion* insEX_MEM, Instruccion* insID_EX,SetRegistros* regSet);
+Riesgo* MEMHazard(Instruccion* insMEM_WB, Instruccion* insID_EX,SetRegistros* regSet);
 char* instructionDecode(Instruccion* instruccion);
-int executeInstruction(Instruccion* instruccion, SetRegistros* regSet);
+int executeInstruction(Instruccion* instruccion, SetRegistros* regSet,Programa* programa);
 void writeBack(Instruccion* instruccion, SetRegistros* regSet);
+int memoryAccess(Instruccion* instruccion,SetRegistros* regSet);
+void imprimirRiesgo(Riesgo* riesgo);
+void insertarRiesgo(SetRiesgos* riesgos, Riesgo* riesgo);
+Riesgo* obtenerRiesgo(SetRiesgos* riesgos,int n);
+void imprimirRiesgos(SetRiesgos* riesgos);
 #endif
 
