@@ -3,4 +3,10 @@ addi $s5, $zero, 100 #Jugador con X
 addi $s5, $zero, 2 #Jugador con O
 addi $s1, $s6, 100
 addi $s4, $s1, 100
+j etiqueta
 addi $s6, $s1, 100
+addi $s1, $s6, 100
+addi $s4, $s1, 100
+etiqueta:
+addi $t0, $s6, 100
+addi $s4, $s1, 100

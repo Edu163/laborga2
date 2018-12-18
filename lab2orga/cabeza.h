@@ -51,6 +51,7 @@ typedef struct SetRegistros{
 typedef struct Riesgo
 {
 	char* nombre;
+	char* tipo; //dato o control
 	char* registro;
 	int linea;
 	int ciclo;
@@ -95,19 +96,24 @@ void avanzarBuffer(Buffer* buffer, int valor);
 void pipeline();
 void printEtapasPL(Instruccion* pipeline);
 int pipelineVacio(Instruccion* pipeline);
+void ponerInstruccionNopJump(Instruccion* pipeline);
 //ETAPAS
+//ALU
 int alu(Instruccion* in,SetRegistros* regSet,Programa* programa);
 int buscarEtiqueta(char* etiqueta, Programa* programa);
-Riesgo* unidadDeteccionRiesgos(SetRegistros* regSet, Instruccion* pipeline,int linea, int CC);
+//DATA HAZARD
+Riesgo* unidadDeteccionRiesgos(SetRiesgos* riesgos, SetRegistros* regSet, Instruccion* pipeline,int linea, int CC);
 Riesgo* EXHazard(Instruccion* insEX_MEM, Instruccion* insID_EX,SetRegistros* regSet);
 Riesgo* MEMHazard(Instruccion* insMEM_WB, Instruccion* insID_EX,SetRegistros* regSet);
-char* instructionDecode(Instruccion* instruccion);
-int executeInstruction(Instruccion* instruccion, SetRegistros* regSet,Programa* programa);
-void writeBack(Instruccion* instruccion, SetRegistros* regSet);
-int memoryAccess(Instruccion* instruccion,SetRegistros* regSet);
 void imprimirRiesgo(Riesgo* riesgo);
 void insertarRiesgo(SetRiesgos* riesgos, Riesgo* riesgo);
 Riesgo* obtenerRiesgo(SetRiesgos* riesgos,int n);
 void imprimirRiesgos(SetRiesgos* riesgos);
+//ETAPAS
+char* instructionDecode(Instruccion* instruccion);
+int executeInstruction(Instruccion* instruccion, SetRegistros* regSet,Programa* programa);
+void writeBack(Instruccion* instruccion, SetRegistros* regSet);
+int memoryAccess(Instruccion* instruccion,SetRegistros* regSet);
+
 #endif
 
