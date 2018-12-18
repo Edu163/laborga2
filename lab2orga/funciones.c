@@ -48,6 +48,7 @@ void pipeline()
 	//----------------------------------------------------
 	int direccion = 0;
 	int ciclosReloj = 1;
+	int cndJump = -1;
 	strcpy(instruccion->op,"NOP");
 	char* funct = (char*)malloc(sizeof(char)*8);
 	int resultado = 0;
@@ -60,28 +61,52 @@ void pipeline()
 		//si está en id poner el j condition en 1, si está en mem ponerlo en 2
 		//agregar un switch para eso aqui
 		//----------------------------------------------------
-		if(strcmp(pipeline[2].op,"j")==0)
+		/*if(strcmp(pipeline[2].op,"j")==0)
 		{
+			printf("%s\n", "AQUI1");
 			ponerInstruccionNopJump(pipeline);
+			//avanzarInstrucciones(pipeline,instruccion);
 		}
-		if(jumpCondition == 0 && strcmp(pipeline[2].op,"j")!=0)
+		if(jumpCondition == 0 && strcmp(pipeline[3].op,"j")!=0)
 		{
+			printf("%s\n", "AQUI2");
 			avanzarInstrucciones(pipeline,instruccion);
 		}
 		//SI LA CONDICION DE SALTO ES VERDADERA
-		else
+		else if(jumpCondition == 1)
+		{
+			printf("%s\n", "AQUI");
+			ponerInstruccionNopJump(pipeline);
+			//avanzarInstrucciones(pipeline,instruccion);
+			jumpCondition = 0;
+		}*/
+	
+		if(cndJump == -1)
+		{
+			avanzarInstrucciones(pipeline,instruccion);
+		}
+		else if(cndJump == 1)
 		{
 			ponerInstruccionNopJump(pipeline);
-			jumpCondition = 0;
 		}
+		else if(cndJump == 2)
+		{
+			ponerInstruccionNopJump(pipeline);
+		}
+		else
+		{
+			avanzarInstrucciones(pipeline,instruccion);
+		}
+
+		cndJump = condicionSaltoJump(pipeline);
 		//----------------------------------------------------
 		riesgo = unidadDeteccionRiesgos(riesgos,regSet,pipeline,direccion,ciclosReloj);
 		instruccion = instructionFetch(inSet,direccion);
 		funct = instructionDecode(&pipeline[0]);
-		if(strcmp(funct,"jump")==0)
+		/*if(strcmp(funct,"jump")==0)
 		{
 			jumpCondition = 1;
-		}
+		}*/
 		resultado = executeInstruction(&pipeline[1],regSet,programa);
 		memoryAccess(&pipeline[2],regSet);
 		writeBack(&pipeline[3], regSet);
@@ -91,10 +116,12 @@ void pipeline()
 		if(ciclosReloj<10)
 		{
 			printf("%d)  ",ciclosReloj);
+			printf("%d)  ",cndJump);
 		}
 		if(ciclosReloj>=10)
 		{
 			printf("%d) ",ciclosReloj);
+			printf("%d)  ",cndJump);
 		}
 		printf("  %s |", funct);
 		printf("%  d |",resultado);
@@ -117,6 +144,28 @@ void pipeline()
 	imprimirRiesgos(riesgos);
 	printf("%d\n",riesgos->largo);
 
+}
+//VERIFICAR INSTRUCCION JUMP EN PIPELINE
+int condicionSaltoJump(Instruccion* pipeline)
+{
+	if(strcmp(pipeline[0].op,"j")==0)
+	{
+		return 1;
+	}
+	if(strcmp(pipeline[1].op,"j")==0)
+	{
+		return 2;
+	}
+	if(strcmp(pipeline[2].op,"j")==0)
+	{
+		return 3;
+	}
+	if(strcmp(pipeline[3].op,"j")==0)
+	{
+		return 3;
+	}
+	return -1;
+		
 }
 //PUEDE GENERAR ERROR AL NO DAR ESPACIO PARA LAS DEMAS VARIABLES
 Instruccion* instructionFetch(SetInstrucciones* memoria, int direccionPC)
@@ -148,6 +197,7 @@ void ponerInstruccionNopJump(Instruccion* pipeline)
 	instruccion->etiqueta = (char*)malloc(sizeof(char)*64);
 	instruccion->siguiente = NULL;
 	strcpy(instruccion->op,"NOP");
+	pipeline[3] = pipeline[2];
 	pipeline[2] = pipeline[1];
 	pipeline[1] = pipeline[0];
 	pipeline[0] = *instruccion;

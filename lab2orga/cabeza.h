@@ -109,6 +109,7 @@ void imprimirRiesgo(Riesgo* riesgo);
 void insertarRiesgo(SetRiesgos* riesgos, Riesgo* riesgo);
 Riesgo* obtenerRiesgo(SetRiesgos* riesgos,int n);
 void imprimirRiesgos(SetRiesgos* riesgos);
+int condicionSaltoJump(Instruccion* pipeline);
 //ETAPAS
 char* instructionDecode(Instruccion* instruccion);
 int executeInstruction(Instruccion* instruccion, SetRegistros* regSet,Programa* programa);

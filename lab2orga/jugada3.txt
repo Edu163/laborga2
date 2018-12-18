@@ -7,6 +7,6 @@ j etiqueta
 addi $s6, $s1, 100
 addi $s1, $s6, 100
 addi $s4, $s1, 100
-etiqueta:
 addi $t0, $s6, 100
+etiqueta:
 addi $s4, $s1, 100
