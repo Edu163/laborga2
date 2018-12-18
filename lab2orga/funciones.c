@@ -23,6 +23,10 @@ void pipeline()
 	inSet = cargarProgramaAMemoria(programa);
 	//printf("\n");
 	imprimirInstrucciones(inSet);
+	printf("ETIQ: %d\n", buscarEtiqueta("label",programa));
+	//int dir = alu(obtenerInstruccion(10,inSet),regSet,programa);
+	//imprimirUnaInstruccion(obtenerInstruccion(10,inSet));
+	//printf("ETIQ: %d\n", dir);
 	//imprimirInstrucciones(inSet);
 	Instruccion* pipeline = (Instruccion*)malloc(sizeof(Instruccion)*4);
 	Instruccion* instruccion = (Instruccion*)malloc(sizeof(Instruccion));
@@ -52,61 +56,27 @@ void pipeline()
 	strcpy(instruccion->op,"NOP");
 	char* funct = (char*)malloc(sizeof(char)*8);
 	int resultado = 0;
-	int jumpCondition = 0;
+	int jumpDireccion = 0;
 	printf("%s\n","                    IF                 ID                EX                MM                WB" );
-	while(pipelineVacio(pipeline) != 1|| direccion<inSet->largo)
+	/*while(pipelineVacio(pipeline) != 1|| direccion<inSet->largo)
 	{	
-		//SI LA CONDICION DE SALTO ES FALSA
-		//METER EN UN METODO QUE SE LLAME JUMP CONDITION que verifique cada una de las pos
-		//si está en id poner el j condition en 1, si está en mem ponerlo en 2
-		//agregar un switch para eso aqui
 		//----------------------------------------------------
-		/*if(strcmp(pipeline[2].op,"j")==0)
+		if(strcmp(funct,"jump")==0)
 		{
-			printf("%s\n", "AQUI1");
+			jumpDireccion = alu(&pipeline[0],regSet,programa);
+			direccion = jumpDireccion;
 			ponerInstruccionNopJump(pipeline);
-			//avanzarInstrucciones(pipeline,instruccion);
-		}
-		if(jumpCondition == 0 && strcmp(pipeline[3].op,"j")!=0)
-		{
-			printf("%s\n", "AQUI2");
-			avanzarInstrucciones(pipeline,instruccion);
-		}
-		//SI LA CONDICION DE SALTO ES VERDADERA
-		else if(jumpCondition == 1)
-		{
-			printf("%s\n", "AQUI");
-			ponerInstruccionNopJump(pipeline);
-			//avanzarInstrucciones(pipeline,instruccion);
-			jumpCondition = 0;
-		}*/
-	
-		if(cndJump == -1)
-		{
-			avanzarInstrucciones(pipeline,instruccion);
-		}
-		else if(cndJump == 1)
-		{
-			ponerInstruccionNopJump(pipeline);
-		}
-		else if(cndJump == 2)
-		{
-			ponerInstruccionNopJump(pipeline);
+			instruccion = instructionFetch(inSet,jumpDireccion);
+			//printf("DIRECCION %d\n", jumpDireccion );
 		}
 		else
 		{
 			avanzarInstrucciones(pipeline,instruccion);
+			instruccion = instructionFetch(inSet,direccion);
 		}
-
-		cndJump = condicionSaltoJump(pipeline);
 		//----------------------------------------------------
 		riesgo = unidadDeteccionRiesgos(riesgos,regSet,pipeline,direccion,ciclosReloj);
-		instruccion = instructionFetch(inSet,direccion);
 		funct = instructionDecode(&pipeline[0]);
-		/*if(strcmp(funct,"jump")==0)
-		{
-			jumpCondition = 1;
-		}*/
 		resultado = executeInstruction(&pipeline[1],regSet,programa);
 		memoryAccess(&pipeline[2],regSet);
 		writeBack(&pipeline[3], regSet);
@@ -116,12 +86,12 @@ void pipeline()
 		if(ciclosReloj<10)
 		{
 			printf("%d)  ",ciclosReloj);
-			printf("%d)  ",cndJump);
+			printf("%d)  ",direccion);
 		}
 		if(ciclosReloj>=10)
 		{
 			printf("%d) ",ciclosReloj);
-			printf("%d)  ",cndJump);
+			printf("%d)  ",direccion);
 		}
 		printf("  %s |", funct);
 		printf("%  d |",resultado);
@@ -134,15 +104,11 @@ void pipeline()
 		//FIN DE LA IMPRESION
 		direccion++;
 		ciclosReloj++;
-		//CAMBIAR LA DIRECCION A RESULTADO
-		if(strcmp(pipeline[1].op,"j")==0)
-		{
-			direccion = resultado;
-		}
-	}
+		//SALTOS DEL PIPELINE
+	}*/
 	//imprimirRegistros(regSet);
-	imprimirRiesgos(riesgos);
-	printf("%d\n",riesgos->largo);
+	//imprimirRiesgos(riesgos);
+	//printf("%d\n",riesgos->largo);
 
 }
 //VERIFICAR INSTRUCCION JUMP EN PIPELINE
@@ -246,10 +212,14 @@ void printEtapasPL(Instruccion* pipeline)
 		if(strcmp(pipeline[i].op,"j")==0)
 		{
 			printf("%s ",pipeline[i].op);
-			//CAMBIO DE RT -> RD
 			printf("%s          ",pipeline[i].etiqueta);
-			//printf("%s ",pipeline[i].rs);
-			//printf("%d ",pipeline[i].constante);
+		}
+		if(strcmp(pipeline[i].op,"beq")==0)
+		{
+			printf("%s ",pipeline[i].op);
+			printf("%s ",pipeline[i].rt);
+			printf("%s ",pipeline[i].rs);
+			printf("%s ",pipeline[i].etiqueta);
 		}
 	}
 }
@@ -285,6 +255,13 @@ void imprimirUnaInstruccion(Instruccion* instruccion)
 		{
 			printf("%s ",instruccion->op);
 			printf("%s          ",instruccion->etiqueta);
+		}
+		if(strcmp(instruccion->op,"beq")==0)
+		{
+			printf("%s ",instruccion->op);
+			printf("%s ",instruccion->rt);
+			printf("%s ",instruccion->rs);
+			printf("%s ",instruccion->etiqueta);
 		}
 }
 //Retorna 1 o 0 dependiendo si el pipeline esta vacio o no (sin instrucciones que ejecutar)
@@ -346,6 +323,20 @@ int alu(Instruccion* in,SetRegistros* regSet,Programa* programa){
 		resultado = buscarEtiqueta(in->etiqueta,programa);
 		//printf("ETIQUETA: %d\n", resultado);
 		//printf("ETIQUETA: %s\n", in->etiqueta);
+		return resultado;
+	}
+	else if(strcmp(funct,"beq")==0)
+	{
+		rt = buscarRegistro(regSet, in->rt);
+		rs = buscarRegistro(regSet, in->rs);
+		if(rt->valor == rs->valor)
+		{
+			resultado = buscarEtiqueta(in->etiqueta,programa);
+		}
+		else
+		{
+			resultado = -1;
+		}
 		return resultado;
 	}
 	return 0;
@@ -1045,6 +1036,17 @@ Instruccion* crearInstruccion(char** programLine)
 		instruction->constante = strtol(auxRegister,&ptr,10);
 		auxRegister = strtok(NULL,")");
 		strcpy(instruction->rs, auxRegister);
+	}
+	else if(strcmp(funct,"beq")==0)
+	{
+		strcpy(instruction->op, funct);
+		strcpy(instruction->rs,programLine[2]);
+		strcpy(instruction->rt,programLine[1]);
+		strcpy(instruction->etiqueta,programLine[3]);	
+		/*largo2 = strlen(programLine[1]);
+		printf("LARGO: %d\n",largo2);
+		//VERSION FINAL PUEDE QUE NO SE DEJe usar strcpy
+		strncpy(instruction->etiqueta, programLine[1],largo2-1);*/
 	}
 	else if(strcmp(funct,"j")==0)
 	{
