@@ -14,7 +14,7 @@ void pipeline()
 	//imprimirRegistros(regSet);
 	SetInstrucciones* inSet = (SetInstrucciones*)malloc(sizeof(SetInstrucciones));
 	Programa* programa = (Programa*)malloc(sizeof(Programa));
-	programa = cargarPrograma("jugada3.txt");
+	programa = cargarPrograma("jugada4.txt");
 	/*for(int i = 0; i < programa->largo; i++)
 	{
 		printf("%s",programa->matrizInstrucciones[i]);
@@ -23,8 +23,8 @@ void pipeline()
 	inSet = cargarProgramaAMemoria(programa);
 	//printf("\n");
 	imprimirInstrucciones(inSet);
-	//printf("ETIQ: %d\n", buscarEtiqueta("label",programa));
-	//int dir = alu(obtenerInstruccion(4,inSet),regSet,programa);
+	//printf("ETIQ: %d\n", buscarEtiqueta("itsasasdasdad",programa));
+	//int dir = alu(obtenerInstruccion(2,inSet),regSet,programa);
 	//imprimirUnaInstruccion(obtenerInstruccion(10,inSet));
 	//printf("ETIQ: %d\n", dir);
 	//imprimirInstrucciones(inSet);
@@ -52,7 +52,6 @@ void pipeline()
 	//----------------------------------------------------
 	int direccion = 0;
 	int ciclosReloj = 1;
-	int cndJump = -1;
 	strcpy(instruccion->op,"NOP");
 	char* funct = (char*)malloc(sizeof(char)*8);
 	char* functMEM = (char*)malloc(sizeof(char)*8);
@@ -94,7 +93,7 @@ void pipeline()
 			instruccion = instructionFetch(inSet,direccion);
 		}
 		//----------------------------------------------------
-		riesgo = unidadDeteccionRiesgos(riesgos,regSet,pipeline,direccion,ciclosReloj);
+		riesgo = unidadDeteccionRiesgos(instruccion,riesgos,regSet,pipeline,direccion,ciclosReloj);
 		funct = instructionDecode(&pipeline[0]);
 		functMEM = instructionDecode(&pipeline[2]);
 		resultado = executeInstruction(&pipeline[1],regSet,programa);
@@ -127,7 +126,7 @@ void pipeline()
 		//SALTOS DEL PIPELINE
 	}
 	//imprimirRegistros(regSet);
-	//imprimirRiesgos(riesgos);
+	imprimirRiesgos(riesgos);
 	//printf("%d\n",riesgos->largo);
 
 }
@@ -271,7 +270,15 @@ void printEtapasPL(Instruccion* pipeline)
 			//CAMBIO DE RT -> RD
 			printf("%s ",pipeline[i].rd);
 			printf("%s ",pipeline[i].rs);
-			printf("%d ",pipeline[i].constante);
+			printf("%d   ",pipeline[i].constante);
+		}
+		if(strcmp(pipeline[i].op,"add")==0||strcmp(pipeline[i].op,"sub")==0)
+		{
+			printf("%s ",pipeline[i].op);
+			//CAMBIO DE RT -> RD
+			printf("%s ",pipeline[i].rd);
+			printf("%s ",pipeline[i].rt);
+			printf("%s    ",pipeline[i].rs);
 		}
 		if(strcmp(pipeline[i].op,"j")==0)
 		{
@@ -313,7 +320,14 @@ void imprimirUnaInstruccion(Instruccion* instruccion)
 			printf("%s ",instruccion->op);
 			printf("%s ",instruccion->rd);
 			printf("%s ",instruccion->rs);
-			printf("%d ",instruccion->constante);
+			printf("%d   ",instruccion->constante);
+		}
+		if(strcmp(instruccion->op,"add")==0||strcmp(instruccion->op,"sub")==0)
+		{
+			printf("%s ",instruccion->op);
+			printf("%s ",instruccion->rd);
+			printf("%s ",instruccion->rt);
+			printf("%s    ",instruccion->rs);
 		}
 		if(strcmp(instruccion->op,"j")==0)
 		{
@@ -385,6 +399,7 @@ int alu(Instruccion* in,SetRegistros* regSet,Programa* programa){
 		//rt = buscarRegistro(regSet, in->rt);
 		//rs = buscarRegistro(regSet, in->rs);
 		resultado = buscarEtiqueta(in->etiqueta,programa);
+		//printf("VALOR: %d\n", resultado);
 		//printf("ETIQUETA: %d\n", resultado);
 		//printf("ETIQUETA: %s\n", in->etiqueta);
 		return resultado;
@@ -396,6 +411,7 @@ int alu(Instruccion* in,SetRegistros* regSet,Programa* programa){
 		if(rt->valor == rs->valor)
 		{
 			resultado = buscarEtiqueta(in->etiqueta,programa);
+			//printf("VALOR: %d\n", resultado);
 		}
 		else
 		{
@@ -407,15 +423,25 @@ int alu(Instruccion* in,SetRegistros* regSet,Programa* programa){
 }
 int buscarEtiqueta(char* etiqueta, Programa* programa)
 {
+	char* etiquitaAux = (char*)malloc(sizeof(char)*64);
+	//printf("LARGO PROGRAMA: %d\n", programa->largo);
+	//printf("ETIQ PAR: %s\n", etiqueta );
+	//printf("LARGO DE ET PAR %d\n", strlen(etiqueta));
 	for(int i = 0; i < programa->largo; i++)
 	{
-		int largo = strlen(programa->matrizInstrucciones[i]);
-		if(strncmp(etiqueta,programa->matrizInstrucciones[i],largo-2)==0)
+		//int largo = strlen(programa->matrizInstrucciones[i]);
+		strcpy(etiquitaAux,programa->matrizInstrucciones[i]);
+		removeChar(etiquitaAux, '\n');
+		removeChar(etiquitaAux, ':');
+		//printf("ETIQUETA INSIDE: %s\n", etiquitaAux);
+		//printf("LAR ET INSIDE %d\n", largo);
+		if(strcmp(etiqueta,etiquitaAux)==0)
 		{
 			//printf("ET: %s\n", etiqueta );
-			//printf("PROGRAMA: %s\n",programa->matrizInstrucciones[i] );
+			//printf("PROGRAMA: %s\n",programa->matrizInstrucciones[i]);
 			return i;
 		}
+		strcpy(etiquitaAux,"");
 	}
 	return -1;
 
@@ -513,7 +539,7 @@ int memoryAccess(Instruccion* in,SetRegistros* regSet)
 void writeBack(Instruccion* instruccion, SetRegistros* regSet)
 {
 	//Registro* rs = (Registro*)malloc(sizeof(Registro));
-	Registro* rt = (Registro*)malloc(sizeof(Registro));
+	//Registro* rt = (Registro*)malloc(sizeof(Registro));
 	Registro* rd = (Registro*)malloc(sizeof(Registro));
 	char* tipo = (char*)malloc(sizeof(char)*8);
 	tipo = instructionDecode(instruccion);
@@ -532,16 +558,18 @@ void writeBack(Instruccion* instruccion, SetRegistros* regSet)
 //------------------------------------------------------
 //FUNCIONES DE DETECCION DE RIESGOS Y ESTRUCTURA RIESGO
 //HAZARD DETECT UNIT
-Riesgo* unidadDeteccionRiesgos(SetRiesgos* riesgos,SetRegistros* regSet,Instruccion* pipeline, int linea, int CC)
+Riesgo* unidadDeteccionRiesgos(Instruccion* fetch, SetRiesgos* riesgos,SetRegistros* regSet,Instruccion* pipeline, int linea, int CC)
 {
 	Riesgo* riesgo = (Riesgo*)malloc(sizeof(Riesgo));
 	riesgo->nombre = (char*)malloc(sizeof(char)*16);
 	char* tipoEX_MEM = (char*)malloc(sizeof(char)*8);
 	char* tipoMEM_WB = (char*)malloc(sizeof(char)*8);
 	char* tipoID_EX = (char*)malloc(sizeof(char)*8);
+	char* tipoIF_ID = (char*)malloc(sizeof(char)*8);
 	tipoEX_MEM = instructionDecode(&pipeline[1]);
 	tipoMEM_WB = instructionDecode(&pipeline[2]);
 	tipoID_EX = instructionDecode(&pipeline[0]);
+	tipoIF_ID = instructionDecode(fetch);
 	if(strcmp(tipoID_EX,"AI")==0 || strcmp(tipoID_EX,"AR")==0)
 	{
 		riesgo = MEMHazard(&pipeline[2],&pipeline[0],regSet);
@@ -558,6 +586,20 @@ Riesgo* unidadDeteccionRiesgos(SetRiesgos* riesgos,SetRegistros* regSet,Instrucc
 	if(strcmp(tipoEX_MEM,"AI")==0 || strcmp(tipoEX_MEM,"AR")==0)
 	{
 		riesgo = EXHazard(&pipeline[1],&pipeline[0],regSet);
+		if(strcmp(riesgo->nombre,"")!=0)
+		{
+			riesgo->ciclo = CC;
+			riesgo->linea = linea;
+		}
+		if(strcmp(riesgo->nombre,"")!=0)
+		{
+			insertarRiesgo(riesgos,riesgo);
+		}
+		
+	}
+	if(strcmp(tipoID_EX,"load")==0)
+	{
+		riesgo = LoadHazard(&pipeline[0],fetch,regSet);
 		if(strcmp(riesgo->nombre,"")!=0)
 		{
 			riesgo->ciclo = CC;
@@ -644,13 +686,13 @@ Riesgo* LoadHazard(Instruccion* insID_EX, Instruccion* insIF_ID, SetRegistros* r
 	{
 		if((strcmp(rd->nombre, rs->nombre) == 0) && strcmp(rd->nombre,"")!=0)
 		{
-			strcpy(riesgo->nombre,"MEM_HAZARD");
+			strcpy(riesgo->nombre,"LOAD_HAZARD");
 			strcpy(riesgo->registro,rd->nombre);
 	
 		}
 		else if((strcmp(rd->nombre, rt->nombre) == 0) && strcmp(rd->nombre,"")!=0)
 		{
-			strcpy(riesgo->nombre,"MEM_HAZARD");
+			strcpy(riesgo->nombre,"LOAD_HAZARD");
 			strcpy(riesgo->registro,rd->nombre);
 		}
 	}
@@ -911,7 +953,9 @@ Programa* cargarPrograma(char* pathFile){
 	if(instructionFile != NULL)
 	{
 		Programa *instruction = (Programa*)malloc(sizeof(Programa));
-		Programa *instructionClean = (Programa*)malloc(sizeof(Programa));  
+		Programa *instructionClean = (Programa*)malloc(sizeof(Programa));
+		instruction->largo = 0;
+		instructionClean->largo = 0;  
 		//Abrir archivos
 		if(instructionFile == NULL)
 		{
@@ -963,6 +1007,7 @@ Programa* elminarComentarios(Programa* inst)
 	char delimit[] = "#";
 	int lineCounter = inst->largo;
 	Programa *instruction = (Programa*)malloc(sizeof(Programa));
+	instruction->largo = 0;
 	instruction->matrizInstrucciones = (char**)malloc(sizeof(char*)*lineCounter);
 	instruction->largo = lineCounter;
 	for(int i = 0; i < lineCounter; i++)
@@ -1056,7 +1101,7 @@ Instruccion* crearInstruccion(char** programLine)
 	instruction->siguiente = NULL;
 	strcpy(funct,programLine[0]);
 	int largo = strlen(funct);
-	int largo2;
+	//int largo2;
 	//printf("%s %c\n","Ultimo caracter: ",funct[largo-1]);
 	if(strcmp(funct,"addi")==0||strcmp(funct,"subi")==0)
 	{
@@ -1071,9 +1116,16 @@ Instruccion* crearInstruccion(char** programLine)
 	else if(strcmp(funct,"add")==0||strcmp(funct,"sub")==0)
 	{
 		strcpy(instruction->op,funct);
-		strcpy(instruction->rs,programLine[2]);
-		strcpy(instruction->rt,programLine[1]);
-		strcpy(instruction->rd,programLine[3]);
+		//strcpy(instruction->rs,programLine[3]);
+		strcpy(instruction->rt,programLine[2]);
+		strcpy(instruction->rd,programLine[1]);
+		removeChar(programLine[3], '\n');
+		strcpy(instruction->rs,programLine[3]);
+		/*largo2 = strlen(programLine[3]);
+		printf("LARGO %d\n", largo2);
+		strncpy(instruction->rs, programLine[3],largo2-1);*/
+
+
 	}
 	else if(strcmp(funct,"sw")==0)
 	{
@@ -1106,9 +1158,11 @@ Instruccion* crearInstruccion(char** programLine)
 		strcpy(instruction->op, funct);
 		strcpy(instruction->rs,programLine[2]);
 		strcpy(instruction->rt,programLine[1]);
+		removeChar(programLine[3], '\n');
+		strcpy(instruction->etiqueta,programLine[3]);
 		//strcpy(instruction->etiqueta,programLine[3]);
-		largo2 = strlen(programLine[3]);
-		strncpy(instruction->etiqueta, programLine[3],largo2-1);	
+		//largo2 = strlen(programLine[3]);
+		//strncpy(instruction->etiqueta, programLine[3],largo2-1);	
 		/*largo2 = strlen(programLine[1]);
 		printf("LARGO: %d\n",largo2);
 		//VERSION FINAL PUEDE QUE NO SE DEJe usar strcpy
@@ -1116,11 +1170,13 @@ Instruccion* crearInstruccion(char** programLine)
 	}
 	else if(strcmp(funct,"j")==0)
 	{
-		strcpy(instruction->op, funct);	
-		largo2 = strlen(programLine[1]);
+		strcpy(instruction->op, funct);
+		removeChar(programLine[1], '\n');
+		strcpy(instruction->etiqueta,programLine[1]);	
+		//largo2 = strlen(programLine[1]);
 		//printf("LARGO: %d\n",largo2);
 		//VERSION FINAL PUEDE QUE NO SE DEJe usar strcpy
-		strncpy(instruction->etiqueta, programLine[1],largo2-1);
+		//strncpy(instruction->etiqueta, programLine[1],largo2-1);
 	}
 	else if(funct[largo-2]==':')
 	{

@@ -103,9 +103,10 @@ void flush(Instruccion* pipeline);
 int alu(Instruccion* in,SetRegistros* regSet,Programa* programa);
 int buscarEtiqueta(char* etiqueta, Programa* programa);
 //DATA HAZARD
-Riesgo* unidadDeteccionRiesgos(SetRiesgos* riesgos, SetRegistros* regSet, Instruccion* pipeline,int linea, int CC);
+Riesgo* unidadDeteccionRiesgos(Instruccion* fetch,SetRiesgos* riesgos, SetRegistros* regSet, Instruccion* pipeline,int linea, int CC);
 Riesgo* EXHazard(Instruccion* insEX_MEM, Instruccion* insID_EX,SetRegistros* regSet);
 Riesgo* MEMHazard(Instruccion* insMEM_WB, Instruccion* insID_EX,SetRegistros* regSet);
+Riesgo* LoadHazard(Instruccion* insID_EX, Instruccion* insIF_ID, SetRegistros* regSet);
 void imprimirRiesgo(Riesgo* riesgo);
 void insertarRiesgo(SetRiesgos* riesgos, Riesgo* riesgo);
 Riesgo* obtenerRiesgo(SetRiesgos* riesgos,int n);
