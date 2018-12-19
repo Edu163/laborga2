@@ -93,6 +93,7 @@ void pipeline()
 			instruccion = instructionFetch(inSet,direccion);
 		}
 		//----------------------------------------------------
+		deteccionRiesgosControl(pipeline,riesgos,regSet,direccion,ciclosReloj);
 		riesgo = unidadDeteccionRiesgos(instruccion,riesgos,regSet,pipeline,direccion,ciclosReloj);
 		funct = instructionDecode(&pipeline[0]);
 		functMEM = instructionDecode(&pipeline[2]);
@@ -557,7 +558,40 @@ void writeBack(Instruccion* instruccion, SetRegistros* regSet)
 //------------------------------------------------------
 //------------------------------------------------------
 //FUNCIONES DE DETECCION DE RIESGOS Y ESTRUCTURA RIESGO
-//HAZARD DETECT UNIT
+//DETECCION DE RIESGOS DE CONTROL
+void deteccionRiesgosControl(Instruccion* pipeline,SetRiesgos* riesgos,SetRegistros* regSet, int linea, int CC)
+{
+	Riesgo* riesgoJump = (Riesgo*)malloc(sizeof(Riesgo));
+	Riesgo* riesgoBranch = (Riesgo*)malloc(sizeof(Riesgo));
+	riesgoJump->nombre = (char*)malloc(sizeof(char)*16);
+	riesgoJump->registro = (char*)malloc(sizeof(char)*16);
+	riesgoJump->tipo = (char*)malloc(sizeof(char)*16);
+	riesgoBranch->nombre = (char*)malloc(sizeof(char)*16);
+	riesgoBranch->tipo = (char*)malloc(sizeof(char)*16);
+	//Riesgo* riesgo = (Riesgo*)malloc(sizeof(Riesgo));
+	char* functJump = (char*)malloc(sizeof(char)*8);
+	char* functBranch = (char*)malloc(sizeof(char)*8);
+	functJump = instructionDecode(&pipeline[0]);
+	functBranch = instructionDecode(&pipeline[2]);
+	if(strcmp(functJump,"jump")==0)
+	{
+		strcpy(riesgoJump->tipo,"Control");
+		strcpy(riesgoJump->nombre,"JUMP");
+		riesgoJump->linea = linea;
+		riesgoJump->ciclo = CC; 
+		insertarRiesgo(riesgos, riesgoJump);
+	}
+	if(strcmp(functBranch,"branch")==0)
+	{
+		strcpy(riesgoBranch->tipo,"Control");
+		strcpy(riesgoBranch->nombre,"BRANCH");
+		riesgoBranch->linea = linea;
+		riesgoBranch->ciclo = CC; 
+		insertarRiesgo(riesgos, riesgoBranch);
+	}
+}
+
+//HAZARD DETECT UNIT  DATOS
 Riesgo* unidadDeteccionRiesgos(Instruccion* fetch, SetRiesgos* riesgos,SetRegistros* regSet,Instruccion* pipeline, int linea, int CC)
 {
 	Riesgo* riesgo = (Riesgo*)malloc(sizeof(Riesgo));
