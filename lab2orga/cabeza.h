@@ -104,7 +104,7 @@ int alu(Instruccion* in,SetRegistros* regSet,Programa* programa);
 int buscarEtiqueta(char* etiqueta, Programa* programa);
 //DATA HAZARD
 Riesgo* unidadDeteccionRiesgos(Instruccion* fetch,SetRiesgos* riesgos, SetRegistros* regSet, Instruccion* pipeline,int linea, int CC);
-void deteccionRiesgosControl(Instruccion* pipeline,SetRiesgos* riesgos,SetRegistros* regSet, int linea, int CC);
+void deteccionRiesgosControl(Programa* programa,Instruccion* pipeline,SetRiesgos* riesgos,SetRegistros* regSet, int linea, int CC);
 Riesgo* EXHazard(Instruccion* insEX_MEM, Instruccion* insID_EX,SetRegistros* regSet);
 Riesgo* MEMHazard(Instruccion* insMEM_WB, Instruccion* insID_EX,SetRegistros* regSet);
 Riesgo* LoadHazard(Instruccion* insID_EX, Instruccion* insIF_ID, SetRegistros* regSet);
