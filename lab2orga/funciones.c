@@ -119,7 +119,7 @@ void pipeline()
 		riesgoLoad = LoadHazard(&pipeline[0],instruccion,regSet);
 		//printf("%s\n",riesgoLoad->nombre );
 		deteccionRiesgosControl(programa,pipeline,riesgos,regSet,direccion,ciclosReloj);
-		riesgo = unidadDeteccionRiesgos(instruccion,riesgos,regSet,pipeline,direccion,ciclosReloj);
+		riesgo = unidadDeteccionRiesgos(instruccion,riesgos,regSet,pipeline,ciclosReloj);
 		funct = instructionDecode(&pipeline[0]);
 		functMEM = instructionDecode(&pipeline[2]);
 		resultado = executeInstruction(&pipeline[1],regSet,programa);
@@ -183,8 +183,16 @@ Instruccion* instructionFetch(SetInstrucciones* memoria, int direccionPC)
 {
 	Instruccion* instruccion = (Instruccion*)malloc(sizeof(instruccion));
 	instruccion->op = (char*)malloc(sizeof(char)*8);
+	//AÑADIR MAS CAMPOS DE ASIGNACION?
+	instruccion = obtenerInstruccion(direccionPC,memoria);
+	if(strcmp(instruccion->op,"ETIQUETA") == 0)
+	{
+		direccionPC++;
+		printf("%s\n","AQUI" );
+	}
 	if(direccionPC>=memoria->largo)
 	{
+		printf("%s\n","AQUI" );
 		strcpy(instruccion->op,"NOP");
 		return instruccion;
 	}
@@ -602,7 +610,7 @@ void deteccionRiesgosControl(Programa* programa,Instruccion* pipeline,SetRiesgos
 	{
 		strcpy(riesgoJump->tipo,"Control");
 		strcpy(riesgoJump->nombre,"JUMP");
-		riesgoJump->linea = linea;
+		riesgoJump->linea = pipeline[0].posicion;
 		riesgoJump->ciclo = CC; 
 		insertarRiesgo(riesgos, riesgoJump);
 	}
@@ -613,7 +621,7 @@ void deteccionRiesgosControl(Programa* programa,Instruccion* pipeline,SetRiesgos
 		{
 			strcpy(riesgoBranch->tipo,"Control");
 			strcpy(riesgoBranch->nombre,"BRANCH");
-			riesgoBranch->linea = linea;
+			riesgoBranch->linea = pipeline[2].posicion;
 			riesgoBranch->ciclo = CC; 
 			insertarRiesgo(riesgos, riesgoBranch);
 		}
@@ -621,7 +629,7 @@ void deteccionRiesgosControl(Programa* programa,Instruccion* pipeline,SetRiesgos
 }
 
 //HAZARD DETECT UNIT  DATOS
-Riesgo* unidadDeteccionRiesgos(Instruccion* fetch, SetRiesgos* riesgos,SetRegistros* regSet,Instruccion* pipeline, int linea, int CC)
+Riesgo* unidadDeteccionRiesgos(Instruccion* fetch, SetRiesgos* riesgos,SetRegistros* regSet,Instruccion* pipeline, int CC)
 {
 	Riesgo* riesgo = (Riesgo*)malloc(sizeof(Riesgo));
 	riesgo->nombre = (char*)malloc(sizeof(char)*16);
@@ -639,7 +647,7 @@ Riesgo* unidadDeteccionRiesgos(Instruccion* fetch, SetRiesgos* riesgos,SetRegist
 		if(strcmp(riesgo->nombre,"")!=0)
 		{
 			riesgo->ciclo = CC;
-			riesgo->linea = linea;
+			riesgo->linea = pipeline[0].posicion;
 		}
 		if(strcmp(riesgo->nombre,"")!=0)
 		{
@@ -652,7 +660,7 @@ Riesgo* unidadDeteccionRiesgos(Instruccion* fetch, SetRiesgos* riesgos,SetRegist
 		if(strcmp(riesgo->nombre,"")!=0)
 		{
 			riesgo->ciclo = CC;
-			riesgo->linea = linea;
+			riesgo->linea = pipeline[0].posicion;
 		}
 		if(strcmp(riesgo->nombre,"")!=0)
 		{
@@ -666,7 +674,7 @@ Riesgo* unidadDeteccionRiesgos(Instruccion* fetch, SetRiesgos* riesgos,SetRegist
 		if(strcmp(riesgo->nombre,"")!=0)
 		{
 			riesgo->ciclo = CC;
-			riesgo->linea = linea;
+			riesgo->linea = fetch->posicion;
 		}
 		if(strcmp(riesgo->nombre,"")!=0)
 		{
@@ -691,13 +699,13 @@ Riesgo* EXHazard(Instruccion* insEX_MEM, Instruccion* insID_EX,SetRegistros* reg
 		rd = buscarRegistro(regSet,insEX_MEM->rd);
 		rs = buscarRegistro(regSet,insID_EX->rs);
 		rt = buscarRegistro(regSet,insID_EX->rt);
-		if((strcmp(rd->nombre, rs->nombre) == 0) && strcmp(rd->nombre,"")!=0)
+		if((strcmp(rd->nombre, rs->nombre) == 0) && strcmp(rd->nombre,"")!=0 && rd->valor != 0)
 		{
 			strcpy(riesgo->nombre,"EX_HAZARD");
 			strcpy(riesgo->registro,rd->nombre);
 	
 		}
-		else if((strcmp(rd->nombre, rt->nombre) == 0)&& strcmp(rd->nombre,"")!=0)
+		else if((strcmp(rd->nombre, rt->nombre) == 0)&& strcmp(rd->nombre,"")!=0 && rd->valor != 0)
 		{
 			strcpy(riesgo->nombre,"EX_HAZARD");
 			strcpy(riesgo->registro,rd->nombre);
@@ -719,14 +727,14 @@ Riesgo* MEMHazard(Instruccion* insMEM_WB, Instruccion* insID_EX,SetRegistros* re
 	rt = buscarRegistro(regSet,insID_EX->rt);
 	if((strcmp(insMEM_WB->op,"NOP")!=0)&&(strcmp(insID_EX->op,"NOP")!=0))
 	{
-		if((strcmp(rd->nombre, rs->nombre) == 0) && strcmp(rd->nombre,"")!=0)
+		if((strcmp(rd->nombre, rs->nombre) == 0) && strcmp(rd->nombre,"")!=0 && rd->valor != 0)
 		{
 			//printf("%s\n","-----------------------------------------------" );
 			strcpy(riesgo->nombre,"MEM_HAZARD");
 			strcpy(riesgo->registro,rd->nombre);
 	
 		}
-		else if((strcmp(rd->nombre, rt->nombre) == 0) && strcmp(rd->nombre,"")!=0)
+		else if((strcmp(rd->nombre, rt->nombre) == 0) && strcmp(rd->nombre,"")!=0 && rd->valor != 0)
 		{
 			strcpy(riesgo->nombre,"MEM_HAZARD");
 			strcpy(riesgo->registro,rd->nombre);
@@ -860,12 +868,15 @@ void imprimirInstrucciones(SetInstrucciones* inSet)
 	for(int i = 0; i < inSet->largo; i++)
 	{
 		instruction = obtenerInstruccion(i,inSet);
+		printf("NUMERO: %d | ",instruction->posicion);
+		printf(" %d | ",instruction->posicionReal);
 		printf("Funct: %s ",instruction->op);
 		printf("RT: %s ",instruction->rt);
 		printf("RS: %s ",instruction->rs);
 		printf("RD: %s ",instruction->rd);
 		printf("Inmediate: %d ",instruction->constante);
 		printf("Etiqueta: %s\n",instruction->etiqueta);
+
 
 	}	
 }
@@ -1101,22 +1112,39 @@ SetInstrucciones* cargarProgramaAMemoria(Programa* programa)
 	Instruccion* instruccion = (Instruccion*)malloc(sizeof(Instruccion));
 	//Instruccion* instruccionAux = (Instruccion*)malloc(sizeof(Instruccion));
 	char** part = (char**)malloc(sizeof(char*)*5);
+	//int numero = 1;
 	for(int i = programa->largo-1; i >= 0; i--)
 	{
 		//FETCH
 		part = makeLine(programa->matrizInstrucciones[i]);
 		//ID
 		instruccion = crearInstruccion(part);
-		if(strcmp(instruccion->op,"Etiqueta")!=0)
-		{
-			insertarInstruccion(inSetInvertido,instruccion);
-		}
+		instruccion->posicionReal = i + 1;
+		//if(strcmp(instruccion->op,"Etiqueta")!=0)
+		//{
+		insertarInstruccion(inSetInvertido,instruccion);
+		//}
 		//EX MEM AND WB	
 	}
-	printf("%d\n",programa->largo);
-	printf("%d\n",inSetInvertido->largo);
+	enumerarInstrucciones(inSetInvertido);
+	//printf("%d\n",programa->largo);
+	//printf("%d\n",inSetInvertido->largo);
 
 	return inSetInvertido;
+}
+void enumerarInstrucciones(SetInstrucciones* instrucciones)
+{
+	Instruccion* instruccion = (Instruccion*)malloc(sizeof(Instruccion));
+	int posicion = 1;
+	for(int i = 0; i < instrucciones->largo; i++)
+	{
+		instruccion = obtenerInstruccion(i,instrucciones);
+		if(strcmp(instruccion->op,"ETIQUETA")!=0)
+		{
+			instruccion->posicion = posicion;
+			posicion++;
+		}	
+	}
 }
 //-----------------------------------------------------------
 //-----------------------------------------------------------
@@ -1253,7 +1281,7 @@ Instruccion* crearInstruccion(char** programLine)
 	else if(funct[largo-2]==':')
 	{
 		//printf("%s\n","DDDDDDDDD" );
-		strcpy(instruction->op,"Etiqueta");
+		strcpy(instruction->op,"ETIQUETA");
 		strcpy(instruction->etiqueta, funct);
 	}
 	return instruction;

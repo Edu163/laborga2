@@ -20,6 +20,8 @@ typedef struct Instruccion
 	char* etiqueta;
 	int  constante;
 	int valor;
+	int posicion;
+	int posicionReal;
 	struct Instruccion* siguiente;
 }Instruccion;
 typedef struct Buffer
@@ -72,6 +74,7 @@ Instruccion* obtenerInstruccion(int n,SetInstrucciones* inSet);
 void imprimirInstrucciones(SetInstrucciones* inSet);
 void imprimirInstrucciones2(SetInstrucciones* inSet);
 void imprimirUnaInstruccion(Instruccion* instruccion);
+void enumerarInstrucciones(SetInstrucciones* instrucciones);
 
 SetRegistros* inicializarRegistros();
 Registro* crearRegistro(char* nombreRegistro, int numero);
@@ -89,7 +92,6 @@ Instruccion* crearInstruccion(char** programLine);
 char** makeLine(char* instructionLine);
 void removeChar(char *str, char garbage);
 void concatChar(char* str, char c);
-Instruccion* instructionFetch(SetInstrucciones* memoria, int direccionPC);
 void avanzarInstrucciones(Instruccion* pipeline,Instruccion* instruccion);
 void avanzarBuffer(Buffer* buffer, int valor);
 
@@ -103,7 +105,7 @@ void flush(Instruccion* pipeline);
 int alu(Instruccion* in,SetRegistros* regSet,Programa* programa);
 int buscarEtiqueta(char* etiqueta, Programa* programa);
 //DATA HAZARD
-Riesgo* unidadDeteccionRiesgos(Instruccion* fetch,SetRiesgos* riesgos, SetRegistros* regSet, Instruccion* pipeline,int linea, int CC);
+Riesgo* unidadDeteccionRiesgos(Instruccion* fetch,SetRiesgos* riesgos, SetRegistros* regSet, Instruccion* pipeline, int CC);
 void deteccionRiesgosControl(Programa* programa,Instruccion* pipeline,SetRiesgos* riesgos,SetRegistros* regSet, int linea, int CC);
 Riesgo* EXHazard(Instruccion* insEX_MEM, Instruccion* insID_EX,SetRegistros* regSet);
 Riesgo* MEMHazard(Instruccion* insMEM_WB, Instruccion* insID_EX,SetRegistros* regSet);
@@ -114,6 +116,7 @@ Riesgo* obtenerRiesgo(SetRiesgos* riesgos,int n);
 void imprimirRiesgos(SetRiesgos* riesgos);
 int condicionSaltoJump(Instruccion* pipeline);
 //ETAPAS
+Instruccion* instructionFetch(SetInstrucciones* memoria, int direccionPC);
 char* instructionDecode(Instruccion* instruccion);
 int executeInstruction(Instruccion* instruccion, SetRegistros* regSet,Programa* programa);
 void writeBack(Instruccion* instruccion, SetRegistros* regSet);
