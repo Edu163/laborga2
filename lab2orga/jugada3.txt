@@ -2,12 +2,10 @@ addi $s5, $zero, 100 #Jugador con X
 addi $s5, $zero, 2 #Jugador con O
 addi $s1, $s6, 100
 addi $s4, $s1, 100
-j etiqueta
+beq $t1, $t0, label
 addi $s6, $s1, 100
 addi $s1, $s6, 100
+addi $s4, $s1, 100
 label:
-addi $s4, $s1, 100
 addi $t0, $s6, 100
-etiqueta:
-addi $s4, $s1, 100
-beq $s1, $s2, label
+addi $s4, $s5, 100

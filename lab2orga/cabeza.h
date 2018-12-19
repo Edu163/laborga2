@@ -97,6 +97,7 @@ void pipeline();
 void printEtapasPL(Instruccion* pipeline);
 int pipelineVacio(Instruccion* pipeline);
 void ponerInstruccionNopJump(Instruccion* pipeline);
+void flush(Instruccion* pipeline);
 //ETAPAS
 //ALU
 int alu(Instruccion* in,SetRegistros* regSet,Programa* programa);

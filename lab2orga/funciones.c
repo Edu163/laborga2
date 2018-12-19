@@ -23,8 +23,8 @@ void pipeline()
 	inSet = cargarProgramaAMemoria(programa);
 	//printf("\n");
 	imprimirInstrucciones(inSet);
-	printf("ETIQ: %d\n", buscarEtiqueta("label",programa));
-	//int dir = alu(obtenerInstruccion(10,inSet),regSet,programa);
+	//printf("ETIQ: %d\n", buscarEtiqueta("label",programa));
+	//int dir = alu(obtenerInstruccion(4,inSet),regSet,programa);
 	//imprimirUnaInstruccion(obtenerInstruccion(10,inSet));
 	//printf("ETIQ: %d\n", dir);
 	//imprimirInstrucciones(inSet);
@@ -55,10 +55,12 @@ void pipeline()
 	int cndJump = -1;
 	strcpy(instruccion->op,"NOP");
 	char* funct = (char*)malloc(sizeof(char)*8);
+	char* functMEM = (char*)malloc(sizeof(char)*8);
 	int resultado = 0;
 	int jumpDireccion = 0;
+	int branchDireccion = 0;
 	printf("%s\n","                    IF                 ID                EX                MM                WB" );
-	/*while(pipelineVacio(pipeline) != 1|| direccion<inSet->largo)
+	while(pipelineVacio(pipeline) != 1|| direccion<inSet->largo)
 	{	
 		//----------------------------------------------------
 		if(strcmp(funct,"jump")==0)
@@ -69,6 +71,23 @@ void pipeline()
 			instruccion = instructionFetch(inSet,jumpDireccion);
 			//printf("DIRECCION %d\n", jumpDireccion );
 		}
+		else if(strcmp(functMEM,"branch")==0)
+		{
+			branchDireccion = alu(&pipeline[2],regSet,programa);
+			if(branchDireccion != -1)
+			{
+				direccion = branchDireccion;
+				//printf("DIRECCION %d\n",branchDireccion);
+				ponerInstruccionNopJump(pipeline);
+				flush(pipeline);
+				instruccion = instructionFetch(inSet,branchDireccion);
+			}
+			else
+			{
+				avanzarInstrucciones(pipeline,instruccion);
+				instruccion = instructionFetch(inSet,direccion);
+			}
+		}
 		else
 		{
 			avanzarInstrucciones(pipeline,instruccion);
@@ -77,6 +96,7 @@ void pipeline()
 		//----------------------------------------------------
 		riesgo = unidadDeteccionRiesgos(riesgos,regSet,pipeline,direccion,ciclosReloj);
 		funct = instructionDecode(&pipeline[0]);
+		functMEM = instructionDecode(&pipeline[2]);
 		resultado = executeInstruction(&pipeline[1],regSet,programa);
 		memoryAccess(&pipeline[2],regSet);
 		writeBack(&pipeline[3], regSet);
@@ -105,7 +125,7 @@ void pipeline()
 		direccion++;
 		ciclosReloj++;
 		//SALTOS DEL PIPELINE
-	}*/
+	}
 	//imprimirRegistros(regSet);
 	//imprimirRiesgos(riesgos);
 	//printf("%d\n",riesgos->largo);
@@ -167,6 +187,50 @@ void ponerInstruccionNopJump(Instruccion* pipeline)
 	pipeline[2] = pipeline[1];
 	pipeline[1] = pipeline[0];
 	pipeline[0] = *instruccion;
+}
+void flush(Instruccion* pipeline)
+{
+	Instruccion* instruccion1 = (Instruccion*)malloc(sizeof(Instruccion));
+	Instruccion* instruccion2 = (Instruccion*)malloc(sizeof(Instruccion));
+	Instruccion* instruccion3 = (Instruccion*)malloc(sizeof(Instruccion));
+	Instruccion* instruccion4 = (Instruccion*)malloc(sizeof(Instruccion));
+
+	instruccion1->op = (char*)malloc(sizeof(char)*8);
+	instruccion1->rs = (char*)malloc(sizeof(char)*8);
+	instruccion1->rt = (char*)malloc(sizeof(char)*8);
+	instruccion1->rd = (char*)malloc(sizeof(char)*8);
+	instruccion1->etiqueta = (char*)malloc(sizeof(char)*64);
+	instruccion1->siguiente = NULL;
+
+	instruccion2->op = (char*)malloc(sizeof(char)*8);
+	instruccion2->rs = (char*)malloc(sizeof(char)*8);
+	instruccion2->rt = (char*)malloc(sizeof(char)*8);
+	instruccion2->rd = (char*)malloc(sizeof(char)*8);
+	instruccion2->etiqueta = (char*)malloc(sizeof(char)*64);
+	instruccion2->siguiente = NULL;
+
+	instruccion3->op = (char*)malloc(sizeof(char)*8);
+	instruccion3->rs = (char*)malloc(sizeof(char)*8);
+	instruccion3->rt = (char*)malloc(sizeof(char)*8);
+	instruccion3->rd = (char*)malloc(sizeof(char)*8);
+	instruccion3->etiqueta = (char*)malloc(sizeof(char)*64);
+	instruccion3->siguiente = NULL;
+
+	instruccion4->op = (char*)malloc(sizeof(char)*8);
+	instruccion4->rs = (char*)malloc(sizeof(char)*8);
+	instruccion4->rt = (char*)malloc(sizeof(char)*8);
+	instruccion4->rd = (char*)malloc(sizeof(char)*8);
+	instruccion4->etiqueta = (char*)malloc(sizeof(char)*64);
+	instruccion4->siguiente = NULL;
+
+	strcpy(instruccion1->op,"NOP");
+	strcpy(instruccion2->op,"NOP");
+	strcpy(instruccion3->op,"NOP");
+	strcpy(instruccion4->op,"NOP");
+
+	pipeline[2] = *instruccion3;
+	pipeline[1] = *instruccion2;
+	pipeline[0] = *instruccion1;
 }
 //Se hace avanzar el buffer con los datos
 void avanzarBuffer(Buffer* buffer, int valor)
@@ -455,8 +519,8 @@ void writeBack(Instruccion* instruccion, SetRegistros* regSet)
 	tipo = instructionDecode(instruccion);
 	if(strcmp(tipo,"AI")==0)
 	{
-		rt = buscarRegistro(regSet, instruccion->rt);
-		rt->valor = instruccion->valor;
+		rd = buscarRegistro(regSet, instruccion->rd);
+		rd->valor = instruccion->valor;
 	}
 	else if(strcmp(tipo,"AR")==0)
 	{
@@ -1042,7 +1106,9 @@ Instruccion* crearInstruccion(char** programLine)
 		strcpy(instruction->op, funct);
 		strcpy(instruction->rs,programLine[2]);
 		strcpy(instruction->rt,programLine[1]);
-		strcpy(instruction->etiqueta,programLine[3]);	
+		//strcpy(instruction->etiqueta,programLine[3]);
+		largo2 = strlen(programLine[3]);
+		strncpy(instruction->etiqueta, programLine[3],largo2-1);	
 		/*largo2 = strlen(programLine[1]);
 		printf("LARGO: %d\n",largo2);
 		//VERSION FINAL PUEDE QUE NO SE DEJe usar strcpy
@@ -1052,7 +1118,7 @@ Instruccion* crearInstruccion(char** programLine)
 	{
 		strcpy(instruction->op, funct);	
 		largo2 = strlen(programLine[1]);
-		printf("LARGO: %d\n",largo2);
+		//printf("LARGO: %d\n",largo2);
 		//VERSION FINAL PUEDE QUE NO SE DEJe usar strcpy
 		strncpy(instruction->etiqueta, programLine[1],largo2-1);
 	}
