@@ -18,10 +18,12 @@ typedef struct Instruccion
 	char* rt;
 	char* rd;
 	char* etiqueta;
+	char* hazard;
 	int  constante;
-	int valor;
 	int posicion;
 	int posicionReal;
+	int valor;
+	int valorForwarding;
 	struct Instruccion* siguiente;
 }Instruccion;
 typedef struct Buffer
@@ -68,6 +70,7 @@ typedef struct SetRiesgos{
 	//int indice;
 }SetRiesgos;
 
+void imprimirStack();
 
 void insertarInstruccion2(SetInstrucciones* inSet,char** linea);
 void insertarInstruccion(SetInstrucciones* inSet,Instruccion* in);
@@ -102,6 +105,7 @@ int pipelineVacio(Instruccion* pipeline);
 void ponerInstruccionNopJump(Instruccion* pipeline);
 void flush(Instruccion* pipeline);
 int condicionSaltoJump(Instruccion* pipeline);
+void forwarding(Instruccion** pipeline, Instruccion* pipeline2, SetRegistros* regSet,Programa* programa, Riesgo* riesgo);
 //ETAPAS
 //ALU
 int alu(Instruccion* in,SetRegistros* regSet,Programa* programa);

@@ -22,7 +22,7 @@ void pipeline()
 	//imprimirRegistros(regSet);
 	SetInstrucciones* inSet = (SetInstrucciones*)malloc(sizeof(SetInstrucciones));
 	Programa* programa = (Programa*)malloc(sizeof(Programa));
-	programa = cargarPrograma("jugada4.txt");
+	programa = cargarPrograma("jugada3.txt");
 	/*for(int i = 0; i < programa->largo; i++)
 	{
 		printf("%s",programa->matrizInstrucciones[i]);
@@ -124,12 +124,13 @@ void pipeline()
 			instruccion = instructionFetch(inSet,direccion);
 		}
 		//----------------------------------------------------
-		riesgoLoad = LoadHazard(&pipeline[1],&pipeline[0],regSet);
+		riesgoLoad = LoadHazard(&pipeline[0],instruccion,regSet);
 		//printf("%s\n",riesgoLoad->nombre );
 		deteccionRiesgosControl(programa,pipeline,riesgos,regSet,*direccion,ciclosReloj);
 		riesgo = unidadDeteccionRiesgos(instruccion,riesgos,regSet,pipeline,ciclosReloj);
 		funct = instructionDecode(&pipeline[0]);
 		functMEM = instructionDecode(&pipeline[2]);
+		forwarding(&pipeline,pipeline,regSet,programa,riesgo);
 		resultado = executeInstruction(&pipeline[1],regSet,programa);
 		memoryAccess(&pipeline[2],regSet);
 		writeBack(&pipeline[3], regSet);
@@ -159,11 +160,23 @@ void pipeline()
 		ciclosReloj++;
 		//SALTOS DEL PIPELINE
 	}
-	//imprimirRegistros(regSet);
+	
 	imprimirRiesgos(riesgos);
 	imprimirSoluciones(riesgos);
+	imprimirRegistros(regSet);
+	imprimirStack();
+	imprimirInstrucciones(inSet);
 	//printf("%d\n",riesgos->largo);
 
+}
+void imprimirStack()
+{
+	for(int i = 0; i < 10 ; i++)
+	{
+		printf("%d ", stackPointer[i]);
+		
+	}
+	printf("\n");
 }
 //VERIFICAR INSTRUCCION JUMP EN PIPELINE
 int condicionSaltoJump(Instruccion* pipeline)
@@ -410,16 +423,22 @@ int alu(Instruccion* in,SetRegistros* regSet,Programa* programa){
 	strcpy(funct, in->op);
  	if(strcmp(funct,"addi")==0)
 	{
-		rt = buscarRegistro(regSet, in->rt);
+		//rt = buscarRegistro(regSet, in->rt);
 		rs = buscarRegistro(regSet, in->rs);
 		constante = in->constante;
+		if(strcmp(in->hazard,"EX_HAZARD_A")==0)
+		{
+			//printf("%s\n","ENTRE AL HAZARD" );
+			resultado = in->valorForwarding + constante;
+			return resultado;
+		}
 		resultado = rs->valor + constante;
 		return resultado;
 	}
 	//CONTROL SIGNAL EX AND WB
 	else if(strcmp(funct,"subi")==0)
 	{
-		rt = buscarRegistro(regSet, in->rt);
+		//rt = buscarRegistro(regSet, in->rt);
 		rs = buscarRegistro(regSet, in->rs);
 		constante = in->constante;
 		resultado = rs->valor - constante;
@@ -428,8 +447,8 @@ int alu(Instruccion* in,SetRegistros* regSet,Programa* programa){
 	//CONTROL SIGNAL EX AND MEM 
 	else if(strcmp(funct,"sw")==0)
 	{
-		rt = buscarRegistro(regSet, in->rt);
-		rs = buscarRegistro(regSet, in->rs);
+		//rt = buscarRegistro(regSet, in->rt);
+		//rs = buscarRegistro(regSet, in->rs);
 		resultado = in->constante;
 		return resultado/4;
 	}
@@ -550,9 +569,49 @@ char* instructionDecode(Instruccion* instruccion)
 int executeInstruction(Instruccion* instruccion, SetRegistros* regSet,Programa* programa)
 {
 	int resultado;
+	printf("VALOR FORWARDING: %d\n", instruccion->valorForwarding);
 	resultado = alu(instruccion,regSet,programa);
 	instruccion->valor = resultado;
 	return resultado;
+}
+int executeInstruction2(Instruccion* instruccion, SetRegistros* regSet,Programa* programa)
+{
+	int resultado;
+	resultado = alu(instruccion,regSet,programa);
+	instruccion->valor = resultado;
+	return resultado;
+}
+void forwarding(Instruccion** pipeline3,Instruccion* pipeline, SetRegistros* regSet,Programa* programa, Riesgo* riesgo)
+{
+	int resultado = 0;
+	if(strcmp(riesgo->nombre,"EX_HAZARD_A")==0 || strcmp(riesgo->nombre,"EX_HAZARD_B")==0)
+	{
+		resultado = alu(&pipeline[1],regSet,programa);
+		//printf("%d\n", resultado);
+		//printf("%s\n","FORWARDING" );
+		//printf("%s %s %s\n",pipeline[0]->op, pipeline[0]->rd, pipeline[0]->rs);
+		pipeline[0].valorForwarding = resultado;
+		//pipeline2[0].valorForwarding = resultado;
+		strcpy(pipeline[0].hazard,riesgo->nombre);
+		//return resultado;
+	}
+	else if(strcmp(riesgo->nombre,"MEM_HAZARD_A")==0 || strcmp(riesgo->nombre,"MEM_HAZARD_B")==0)
+	{
+		resultado = alu(&pipeline[1],regSet,programa);
+		pipeline[0].valorForwarding = resultado;
+		strcpy(pipeline[0].hazard,riesgo->nombre);
+		//return resultado;
+	}
+	else if(strcmp(riesgo->nombre,"LOAD_HAZARD_A")==0 || strcmp(riesgo->nombre,"LOAD_HAZARD_B")==0)
+	{
+		resultado = alu(&pipeline[1],regSet,programa);
+		pipeline[0].valorForwarding = resultado;
+		strcpy(pipeline[0].hazard,riesgo->nombre);
+		//return resultado;
+	}
+	//resultado = alu(instruccion,regSet,programa);
+	//instruccion->valor = resultado;
+	//return resultado;
 }
 //MEM
 int memoryAccess(Instruccion* in,SetRegistros* regSet)
@@ -565,7 +624,7 @@ int memoryAccess(Instruccion* in,SetRegistros* regSet)
 	strcpy(funct, in->op);
  	if(strcmp(funct,"sw")==0)
 	{
-		rt = buscarRegistro(regSet, in->rt);
+		rt = buscarRegistro(regSet, in->rd);
 		rs = buscarRegistro(regSet, in->rs);
 		posicion = in->constante/4;
 		stackPointer[posicion] = rt->valor;
@@ -573,7 +632,7 @@ int memoryAccess(Instruccion* in,SetRegistros* regSet)
 	}
 	else if(strcmp(funct,"lw")==0)
 	{
-		rt = buscarRegistro(regSet, in->rt);
+		rt = buscarRegistro(regSet, in->rd);
 		rs = buscarRegistro(regSet, in->rs);
 		posicion = in->constante/4;
 		rt->valor = stackPointer[posicion];
@@ -592,9 +651,15 @@ void writeBack(Instruccion* instruccion, SetRegistros* regSet)
 	if(strcmp(tipo,"AI")==0)
 	{
 		rd = buscarRegistro(regSet, instruccion->rd);
+		printf("VARLO DE LA INSTRUCCION %d\n", instruccion->valor);
 		rd->valor = instruccion->valor;
 	}
 	else if(strcmp(tipo,"AR")==0)
+	{
+		rd = buscarRegistro(regSet, instruccion->rd);
+		rd->valor = instruccion->valor;
+	}
+	else if(strcmp(tipo,"load")==0)
 	{
 		rd = buscarRegistro(regSet, instruccion->rd);
 		rd->valor = instruccion->valor;
@@ -687,17 +752,17 @@ Riesgo* unidadDeteccionRiesgos(Instruccion* fetch, SetRiesgos* riesgos,SetRegist
 		}
 		
 	}
-	if(strcmp(tipoEX_MEM,"load")==0)
+	if(strcmp(tipoID_EX,"load")==0)
 	{
 		//printf("%s\n","Aqui5" );
 		//NO USAR EL FETCH? PREGUNTAR CUAL ESTA BIEN
-		riesgo = LoadHazard(&pipeline[1],&pipeline[0],regSet);
+		riesgo = LoadHazard(&pipeline[0],fetch,regSet);
 		//printf("%s\n",riesgo->nombre );
 		if(strcmp(riesgo->nombre,"")!=0)
 		{
 			riesgo->ciclo = CC;
-			//riesgo->linea = fetch->posicion;
-			riesgo->linea = pipeline[0].posicion;
+			riesgo->linea = fetch->posicion;
+			//riesgo->linea = pipeline[0].posicion;
 
 		}
 		if(strcmp(riesgo->nombre,"")!=0)
@@ -724,16 +789,16 @@ Riesgo* EXHazard(Instruccion* insEX_MEM, Instruccion* insID_EX,SetRegistros* reg
 		rd = buscarRegistro(regSet,insEX_MEM->rd);
 		rs = buscarRegistro(regSet,insID_EX->rs);
 		rt = buscarRegistro(regSet,insID_EX->rt);
-		if((strcmp(rd->nombre, rs->nombre) == 0) && strcmp(rd->nombre,"")!=0 /*&& rd->valor != 0*/)
+		if((strcmp(rd->nombre, rs->nombre) == 0) && strcmp(rd->nombre,"")!=0)
 		{
-			strcpy(riesgo->nombre,"EX_HAZARD");
+			strcpy(riesgo->nombre,"EX_HAZARD_A");
 			strcpy(riesgo->registro,rd->nombre);
 			strcpy(riesgo->descripcion,"Hazard de datos");
 	
 		}
-		else if((strcmp(rd->nombre, rt->nombre) == 0)&& strcmp(rd->nombre,"")!=0 /*&& rd->valor != 0*/)
+		else if((strcmp(rd->nombre, rt->nombre) == 0)&& strcmp(rd->nombre,"")!=0)
 		{
-			strcpy(riesgo->nombre,"EX_HAZARD");
+			strcpy(riesgo->nombre,"EX_HAZARD_B");
 			strcpy(riesgo->registro,rd->nombre);
 			strcpy(riesgo->descripcion,"Hazard de datos");
 		}
@@ -758,14 +823,14 @@ Riesgo* MEMHazard(Instruccion* insMEM_WB, Instruccion* insID_EX,SetRegistros* re
 		if((strcmp(rd->nombre, rs->nombre) == 0) && strcmp(rd->nombre,"")!=0 && rd->valor != 0)
 		{
 			//printf("%s\n","-----------------------------------------------" );
-			strcpy(riesgo->nombre,"MEM_HAZARD");
+			strcpy(riesgo->nombre,"MEM_HAZARD_A");
 			strcpy(riesgo->registro,rd->nombre);
 			strcpy(riesgo->descripcion,"Hazard de datos");
 	
 		}
 		else if((strcmp(rd->nombre, rt->nombre) == 0) && strcmp(rd->nombre,"")!=0 && rd->valor != 0)
 		{
-			strcpy(riesgo->nombre,"MEM_HAZARD");
+			strcpy(riesgo->nombre,"MEM_HAZARD_B");
 			strcpy(riesgo->registro,rd->nombre);
 			strcpy(riesgo->descripcion,"Hazard de datos");
 		}
@@ -793,7 +858,7 @@ Riesgo* LoadHazard(Instruccion* insID_EX, Instruccion* insIF_ID, SetRegistros* r
 			if((strcmp(rd->nombre, rs->nombre) == 0) && strcmp(rd->nombre,"")!=0)
 			{
 				//printf("%s\n", "SI HAY");
-				strcpy(riesgo->nombre,"LOAD_HAZARD");
+				strcpy(riesgo->nombre,"LOAD_HAZARD_A");
 				strcpy(riesgo->descripcion,"Hazard de datos");
 				strcpy(riesgo->registro,rd->nombre);
 				return riesgo;
@@ -802,7 +867,7 @@ Riesgo* LoadHazard(Instruccion* insID_EX, Instruccion* insIF_ID, SetRegistros* r
 			else if((strcmp(rd->nombre, rt->nombre) == 0) && strcmp(rd->nombre,"")!=0)
 			{
 				//printf("%s\n", "SI HAY");
-				strcpy(riesgo->nombre,"LOAD_HAZARD");
+				strcpy(riesgo->nombre,"LOAD_HAZARD_B");
 				strcpy(riesgo->descripcion,"Hazard de datos");
 				strcpy(riesgo->registro,rd->nombre);
 				return riesgo;
@@ -842,15 +907,15 @@ void imprimirSoluciones(SetRiesgos* riesgos)
 }
 void imprimirSolucion(Riesgo* riesgo)
 {
-	if(strcmp(riesgo->nombre,"LOAD_HAZARD") == 0)
+	if(strcmp(riesgo->nombre,"LOAD_HAZARD_A") == 0 || strcmp(riesgo->nombre,"LOAD_HAZARD_B") == 0)
 	{
 		printf("%s\n","Solucionable a traves de: NOP y Forwarding MEM/WB a ID/EX");
 	}
-	else if(strcmp(riesgo->nombre,"EX_HAZARD") == 0)
+	else if(strcmp(riesgo->nombre,"EX_HAZARD_A") == 0 || strcmp(riesgo->nombre,"EX_HAZARD_B") == 0)
 	{
 		printf("%s\n","Solucionable a traves de: Forwarding EX/MEM a ID/EX");
 	}
-	else if(strcmp(riesgo->nombre,"MEM_HAZARD") == 0)
+	else if(strcmp(riesgo->nombre,"MEM_HAZARD_A") == 0 || strcmp(riesgo->nombre,"MEM_HAZARD_B") == 0)
 	{
 		printf("%s\n","Solucionable a traves de: Forwarding MEM/WB a ID/EX");
 	}
@@ -947,7 +1012,8 @@ void imprimirInstrucciones(SetInstrucciones* inSet)
 		printf("RS: %s ",instruction->rs);
 		printf("RD: %s ",instruction->rd);
 		printf("Inmediate: %d ",instruction->constante);
-		printf("Etiqueta: %s\n",instruction->etiqueta);
+		//printf("Etiqueta: %s\n",instruction->etiqueta);
+		printf("FORWARDING: %d\n",instruction->valorForwarding);
 
 
 	}	
@@ -1270,11 +1336,11 @@ Instruccion* crearInstruccion(char** programLine)
 	instruction->rt = (char*)malloc(sizeof(char)*8);
 	instruction->rd = (char*)malloc(sizeof(char)*8);
 	instruction->etiqueta = (char*)malloc(sizeof(char)*64);
+	instruction->hazard = (char*)malloc(sizeof(char)*16);
 	instruction->siguiente = NULL;
 	strcpy(funct,programLine[0]);
 	int largo = strlen(funct);
-	//int largo2;
-	//printf("%s %c\n","Ultimo caracter: ",funct[largo-1]);
+	strcpy(instruction->hazard,"");
 	if(strcmp(funct,"addi")==0||strcmp(funct,"subi")==0)
 	{
 		strcpy(instruction->op,funct);
