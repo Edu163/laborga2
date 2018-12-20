@@ -112,7 +112,7 @@ void pipeline()
 		else if(strcmp(riesgoLoad->nombre,"LOAD_HAZARD")==0)
 		{
 			//printf("%s\n","AQUIIIIIII" );
-			printf("%s\n","Aqui4" );
+			//printf("%s\n","Aqui4" );
 			ponerInstruccionNopJump(pipeline);
 			*direccion = *direccion - 1;
 			instruccion = instructionFetch(inSet,direccion);
@@ -657,7 +657,7 @@ Riesgo* unidadDeteccionRiesgos(Instruccion* fetch, SetRiesgos* riesgos,SetRegist
 	tipoMEM_WB = instructionDecode(&pipeline[2]);
 	tipoID_EX = instructionDecode(&pipeline[0]);
 	tipoIF_ID = instructionDecode(fetch);
-	if(strcmp(tipoID_EX,"AI")==0 || strcmp(tipoID_EX,"AR")==0)
+	if(strcmp(tipoMEM_WB,"AI")==0 || strcmp(tipoMEM_WB,"AR")==0)
 	{
 		riesgo = MEMHazard(&pipeline[2],&pipeline[0],regSet);
 		if(strcmp(riesgo->nombre,"")!=0)
@@ -687,11 +687,12 @@ Riesgo* unidadDeteccionRiesgos(Instruccion* fetch, SetRiesgos* riesgos,SetRegist
 		}
 		
 	}
-	if(strcmp(tipoID_EX,"load")==0)
+	if(strcmp(tipoEX_MEM,"load")==0)
 	{
-		printf("%s\n","Aqui5" );
+		//printf("%s\n","Aqui5" );
 		//NO USAR EL FETCH? PREGUNTAR CUAL ESTA BIEN
 		riesgo = LoadHazard(&pipeline[1],&pipeline[0],regSet);
+		//printf("%s\n",riesgo->nombre );
 		if(strcmp(riesgo->nombre,"")!=0)
 		{
 			riesgo->ciclo = CC;
@@ -749,11 +750,11 @@ Riesgo* MEMHazard(Instruccion* insMEM_WB, Instruccion* insID_EX,SetRegistros* re
 	Registro* rs = (Registro*)malloc(sizeof(Registro));
 	Registro* rt = (Registro*)malloc(sizeof(Registro));
 	Registro* rd = (Registro*)malloc(sizeof(Registro));
-	rd = buscarRegistro(regSet,insMEM_WB->rd);
-	rs = buscarRegistro(regSet,insID_EX->rs);
-	rt = buscarRegistro(regSet,insID_EX->rt);
 	if((strcmp(insMEM_WB->op,"NOP")!=0)&&(strcmp(insID_EX->op,"NOP")!=0))
 	{
+		rd = buscarRegistro(regSet,insMEM_WB->rd);
+		rs = buscarRegistro(regSet,insID_EX->rs);
+		rt = buscarRegistro(regSet,insID_EX->rt);
 		if((strcmp(rd->nombre, rs->nombre) == 0) && strcmp(rd->nombre,"")!=0 && rd->valor != 0)
 		{
 			//printf("%s\n","-----------------------------------------------" );
