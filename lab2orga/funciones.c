@@ -22,7 +22,7 @@ void pipeline()
 	//imprimirRegistros(regSet);
 	SetInstrucciones* inSet = (SetInstrucciones*)malloc(sizeof(SetInstrucciones));
 	Programa* programa = (Programa*)malloc(sizeof(Programa));
-	programa = cargarPrograma("jugada5.txt");
+	programa = cargarPrograma("jugada2.txt");
 	/*for(int i = 0; i < programa->largo; i++)
 	{
 		printf("%s",programa->matrizInstrucciones[i]);
@@ -131,9 +131,10 @@ void pipeline()
 		funct = instructionDecode(&pipeline[0]);
 		functMEM = instructionDecode(&pipeline[2]);
 		forwarding(&pipeline,pipeline,regSet,programa,riesgo);
+		writeBack(&pipeline[3], regSet);
 		resultado = executeInstruction(&pipeline[1],regSet,programa);
 		memoryAccess(&pipeline[2],regSet);
-		writeBack(&pipeline[3], regSet);
+		
 		//IMPRIMIR
 		//----------------------------------------------------
 		//----------------------------------------------------
@@ -163,7 +164,7 @@ void pipeline()
 	
 	imprimirRiesgos(riesgos);
 	imprimirSoluciones(riesgos);
-	//imprimirRegistros(regSet);
+	imprimirRegistros(regSet);
 	//imprimirStack();
 	//imprimirInstrucciones(inSet);
 	//printf("%d\n",riesgos->largo);
@@ -522,11 +523,13 @@ int alu(Instruccion* in,SetRegistros* regSet,Programa* programa){
 		rt = buscarRegistro(regSet, in->rt);
 		if(strcmp(in->hazard,"EX_HAZARD_A")==0)
 		{
+			printf("%s\n", in->hazard );
 			resultado = rt->valor * in->valorForwarding;
 			return resultado;
 		}
 		else if(strcmp(in->hazard,"EX_HAZARD_B")==0)
 		{
+			printf("%s\n", in->hazard );
 			resultado = in->valorForwarding * rs->valor;
 			return resultado;
 		}
