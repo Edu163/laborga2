@@ -22,7 +22,7 @@ void pipeline()
 	//imprimirRegistros(regSet);
 	SetInstrucciones* inSet = (SetInstrucciones*)malloc(sizeof(SetInstrucciones));
 	Programa* programa = (Programa*)malloc(sizeof(Programa));
-	programa = cargarPrograma("jugada4.txt");
+	programa = cargarPrograma("jugada6.txt");
 	/*for(int i = 0; i < programa->largo; i++)
 	{
 		printf("%s",programa->matrizInstrucciones[i]);
@@ -93,7 +93,7 @@ void pipeline()
 				flush(pipeline);
 				instruccion = instructionFetch(inSet,direccion);
 			}
-			else if(strcmp(riesgoLoad->nombre,"LOAD_HAZARD")==0)
+			else if(strcmp(riesgoLoad->nombre,"LOAD_HAZARD_A")==0 || strcmp(riesgoLoad->nombre,"LOAD_HAZARD_B")==0)
 			{
 				//printf("%s\n","AQUIIIIIII" );
 				//printf("%s\n","Aqui3" );
@@ -109,7 +109,7 @@ void pipeline()
 				instruccion = instructionFetch(inSet,direccion);
 			}
 		}
-		else if(strcmp(riesgoLoad->nombre,"LOAD_HAZARD")==0)
+		else if(strcmp(riesgoLoad->nombre,"LOAD_HAZARD_A")==0 || strcmp(riesgoLoad->nombre,"LOAD_HAZARD_B")==0)
 		{
 			//printf("%s\n","AQUIIIIIII" );
 			//printf("%s\n","Aqui4" );
@@ -130,10 +130,11 @@ void pipeline()
 		riesgo = unidadDeteccionRiesgos(instruccion,riesgos,regSet,pipeline,ciclosReloj);
 		funct = instructionDecode(&pipeline[0]);
 		functMEM = instructionDecode(&pipeline[2]);
-		//forwarding(&pipeline,pipeline,regSet,programa,riesgo);
+		forwarding(&pipeline,pipeline,regSet,programa,riesgo);
+		writeBack(&pipeline[3], regSet);
 		resultado = executeInstruction(&pipeline[1],regSet,programa);
 		memoryAccess(&pipeline[2],regSet);
-		writeBack(&pipeline[3], regSet);
+		
 		//IMPRIMIR
 		//----------------------------------------------------
 		//----------------------------------------------------
@@ -163,8 +164,8 @@ void pipeline()
 	
 	imprimirRiesgos(riesgos);
 	imprimirSoluciones(riesgos);
-	//imprimirRegistros(regSet);
-	//imprimirStack();
+	imprimirRegistros(regSet);
+	imprimirStack();
 	//imprimirInstrucciones(inSet);
 	//printf("%d\n",riesgos->largo);
 
@@ -442,12 +443,14 @@ int alu(Instruccion* in,SetRegistros* regSet,Programa* programa){
 	int constante;
 	int resultado;
 	strcpy(funct, in->op);
+	printf("ALU: %s\n",in->hazard );
  	if(strcmp(funct,"addi")==0)
 	{
 		rs = buscarRegistro(regSet, in->rs);
 		constante = in->constante;
 		if(strcmp(in->hazard,"EX_HAZARD_A")==0)
 		{
+			//printf("%s\n","EX_HAZARD_A" );
 			resultado = in->valorForwarding + constante;
 			return resultado;
 		}
@@ -522,11 +525,14 @@ int alu(Instruccion* in,SetRegistros* regSet,Programa* programa){
 		rt = buscarRegistro(regSet, in->rt);
 		if(strcmp(in->hazard,"EX_HAZARD_A")==0)
 		{
+			//printf("%s\n","EX_HAZARD_A" );
 			resultado = rt->valor * in->valorForwarding;
+			//strcpy(in->hazard,"");
 			return resultado;
 		}
 		else if(strcmp(in->hazard,"EX_HAZARD_B")==0)
 		{
+			printf("ALU %s\n","EX_HAZARD_B" );
 			resultado = in->valorForwarding * rs->valor;
 			return resultado;
 		}
@@ -571,7 +577,7 @@ int alu(Instruccion* in,SetRegistros* regSet,Programa* programa){
 		//rt = buscarRegistro(regSet, in->rt);
 		//rs = buscarRegistro(regSet, in->rs);
 		resultado = buscarEtiqueta(in->etiqueta,programa);
-		printf("RESULTADO : %d\n",resultado);
+		//printf("RESULTADO : %d\n",resultado);
 		//printf("VALOR: %d\n", resultado);
 		//printf("ETIQUETA: %d\n", resultado);
 		//printf("ETIQUETA: %s\n", in->etiqueta);
@@ -583,7 +589,7 @@ int alu(Instruccion* in,SetRegistros* regSet,Programa* programa){
 		//rs = buscarRegistro(regSet, in->rs);
 		ra = buscarRegistro(regSet, "$ra");
 		resultado = buscarEtiqueta(in->etiqueta,programa);
-		printf("RESULTADO : %d\n",resultado);
+		//printf("RESULTADO : %d\n",resultado);
 		ra->valor = resultado;
 		//printf("VALOR: %d\n", resultado);
 		//printf("ETIQUETA: %d\n", resultado);
@@ -739,9 +745,11 @@ char* instructionDecode(Instruccion* instruccion)
 int executeInstruction(Instruccion* instruccion, SetRegistros* regSet,Programa* programa)
 {
 	int resultado;
+	instruccion->hazard = (char*)malloc(sizeof(char)*32);
 	//printf("VALOR FORWARDING: %d\n", instruccion->valorForwarding);
 	resultado = alu(instruccion,regSet,programa);
 	instruccion->valor = resultado;
+	//strcpy(instruccion->hazard,"");
 	return resultado;
 }
 int executeInstruction2(Instruccion* instruccion, SetRegistros* regSet,Programa* programa)
@@ -758,8 +766,9 @@ void forwarding(Instruccion** pipeline3,Instruccion* pipeline, SetRegistros* reg
 	{
 		resultado = alu(&pipeline[1],regSet,programa);
 		//printf("%d\n", resultado);
-		//printf("%s\n","FORWARDING" );
-		//printf("%s %s %s\n",pipeline[0]->op, pipeline[0]->rd, pipeline[0]->rs);
+		printf("%s %s VFW: %d\n","Forwarding: ", riesgo->nombre, resultado);
+		//printf("%s\n",riesgo->nombre);
+		//printf("%s %s %s\n",pipeline[0].op, pipeline[0].rd, pipeline[0].rs);
 		pipeline[0].valorForwarding = resultado;
 		//pipeline2[0].valorForwarding = resultado;
 		strcpy(pipeline[0].hazard,riesgo->nombre);
@@ -821,11 +830,13 @@ void writeBack(Instruccion* instruccion, SetRegistros* regSet)
 	if(strcmp(tipo,"AI")==0)
 	{
 		rd = buscarRegistro(regSet, instruccion->rd);
-		//printf("VARLO DE LA INSTRUCCION %d\n", instruccion->valor);
+		//printf("VARLO DE LA INSTRUCCION I %d\n", instruccion->valor);
 		rd->valor = instruccion->valor;
 	}
 	else if(strcmp(tipo,"AR")==0)
 	{
+		//printf("VARLO DE LA INSTRUCCION R %d\n", instruccion->valor);
+		//printf("REG: %s\n",instruccion->rd);
 		rd = buscarRegistro(regSet, instruccion->rd);
 		rd->valor = instruccion->valor;
 	}
@@ -964,6 +975,7 @@ Riesgo* EXHazard(Instruccion* insEX_MEM, Instruccion* insID_EX,SetRegistros* reg
 			strcpy(riesgo->nombre,"EX_HAZARD_A");
 			strcpy(riesgo->registro,rd->nombre);
 			strcpy(riesgo->descripcion,"Hazard de datos");
+			printf("%s\n",riesgo->nombre );
 	
 		}
 		else if((strcmp(rd->nombre, rt->nombre) == 0)&& strcmp(rd->nombre,"")!=0)
@@ -971,6 +983,7 @@ Riesgo* EXHazard(Instruccion* insEX_MEM, Instruccion* insID_EX,SetRegistros* reg
 			strcpy(riesgo->nombre,"EX_HAZARD_B");
 			strcpy(riesgo->registro,rd->nombre);
 			strcpy(riesgo->descripcion,"Hazard de datos");
+			printf("%s\n",riesgo->nombre );
 		}
 	}
 	return riesgo;
