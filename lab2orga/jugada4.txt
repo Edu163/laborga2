@@ -11,5 +11,5 @@ subi $t0, $t0, 50
 addi $sp, $sp, 4
 j iter
 exit:
-addi $s0, $t0, 1
+addiu $s0, $t0, 1
 add $v0, $s0, $t1

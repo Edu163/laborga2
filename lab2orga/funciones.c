@@ -22,7 +22,7 @@ void pipeline()
 	//imprimirRegistros(regSet);
 	SetInstrucciones* inSet = (SetInstrucciones*)malloc(sizeof(SetInstrucciones));
 	Programa* programa = (Programa*)malloc(sizeof(Programa));
-	programa = cargarPrograma("jugada5.txt");
+	programa = cargarPrograma("jugada4.txt");
 	/*for(int i = 0; i < programa->largo; i++)
 	{
 		printf("%s",programa->matrizInstrucciones[i]);
@@ -130,7 +130,7 @@ void pipeline()
 		riesgo = unidadDeteccionRiesgos(instruccion,riesgos,regSet,pipeline,ciclosReloj);
 		funct = instructionDecode(&pipeline[0]);
 		functMEM = instructionDecode(&pipeline[2]);
-		forwarding(&pipeline,pipeline,regSet,programa,riesgo);
+		//forwarding(&pipeline,pipeline,regSet,programa,riesgo);
 		resultado = executeInstruction(&pipeline[1],regSet,programa);
 		memoryAccess(&pipeline[2],regSet);
 		writeBack(&pipeline[3], regSet);
