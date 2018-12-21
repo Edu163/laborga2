@@ -109,6 +109,7 @@ void forwarding(Instruccion** pipeline, Instruccion* pipeline2, SetRegistros* re
 //ETAPAS
 //ALU
 int alu(Instruccion* in,SetRegistros* regSet,Programa* programa);
+int aluForwarding(Instruccion* in,SetRegistros* regSet,Programa* programa);
 int buscarEtiqueta(char* etiqueta, Programa* programa);
 //DATA HAZARD
 Riesgo* unidadDeteccionRiesgos(Instruccion* fetch,SetRiesgos* riesgos, SetRegistros* regSet, Instruccion* pipeline, int CC);

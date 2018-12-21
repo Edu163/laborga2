@@ -22,7 +22,7 @@ void pipeline()
 	//imprimirRegistros(regSet);
 	SetInstrucciones* inSet = (SetInstrucciones*)malloc(sizeof(SetInstrucciones));
 	Programa* programa = (Programa*)malloc(sizeof(Programa));
-	programa = cargarPrograma("jugada2.txt");
+	programa = cargarPrograma("jugada6.txt");
 	/*for(int i = 0; i < programa->largo; i++)
 	{
 		printf("%s",programa->matrizInstrucciones[i]);
@@ -450,6 +450,247 @@ int alu(Instruccion* in,SetRegistros* regSet,Programa* programa){
 		if(strcmp(in->hazard,"EX_HAZARD_A")==0)
 		{
 			resultado = in->valorForwarding + constante;
+			strcpy(in->hazard,"");
+			return resultado;
+		}
+		resultado = rs->valor + constante;
+		return resultado;
+	}
+	if(strcmp(funct,"addiu")==0)
+	{
+		rs = buscarRegistro(regSet, in->rs);
+		constante = in->constante;
+		if(strcmp(in->hazard,"EX_HAZARD_A")==0)
+		{
+			resultado = in->valorForwarding + constante;
+			strcpy(in->hazard,"");
+			return resultado;
+		}
+		resultado = rs->valor + constante;
+		return abs(resultado);
+	}
+	//CONTROL SIGNAL EX AND WB
+	else if(strcmp(funct,"subi")==0)
+	{
+		//rt = buscarRegistro(regSet, in->rt);
+		rs = buscarRegistro(regSet, in->rs);
+		constante = in->constante;
+		if(strcmp(in->hazard,"EX_HAZARD_A")==0)
+		{
+			resultado = in->valorForwarding - constante;
+			strcpy(in->hazard,"");
+			return resultado;
+		}
+		resultado = rs->valor - constante;
+		return resultado;
+	}
+	else if(strcmp(funct,"add")==0)
+	{
+		rs = buscarRegistro(regSet, in->rs);
+		rt = buscarRegistro(regSet, in->rt);
+		if(strcmp(in->hazard,"EX_HAZARD_A")==0)
+		{
+			resultado = rt->valor + in->valorForwarding;
+			strcpy(in->hazard,"");
+			return resultado;
+		}
+		else if(strcmp(in->hazard,"EX_HAZARD_B")==0)
+		{
+			resultado = in->valorForwarding + rs->valor;
+			strcpy(in->hazard,"");
+			return resultado;
+		}
+		resultado = rs->valor + rt->valor;
+		return resultado;
+	}
+	else if(strcmp(funct,"sub")==0)
+	{
+		//rt = buscarRegistro(regSet, in->rt);
+		rs = buscarRegistro(regSet, in->rs);
+		rt = buscarRegistro(regSet, in->rt);
+		if(strcmp(in->hazard,"EX_HAZARD_A")==0)
+		{
+			resultado = rt->valor - in->valorForwarding;
+			strcpy(in->hazard,"");
+			return resultado;
+		}
+		else if(strcmp(in->hazard,"EX_HAZARD_B")==0)
+		{
+			resultado = in->valorForwarding - rs->valor;
+			strcpy(in->hazard,"");
+			return resultado;
+		}
+		resultado = rt->valor - rs->valor;
+		return resultado;
+	}
+	else if(strcmp(funct,"mul")==0)
+	{
+		//rt = buscarRegistro(regSet, in->rt);
+		rs = buscarRegistro(regSet, in->rs);
+		rt = buscarRegistro(regSet, in->rt);
+		if(strcmp(in->hazard,"EX_HAZARD_A")==0)
+		{
+			//printf("%s\n", in->hazard );
+			printf("FW: %d\n",in->valorForwarding);
+			resultado = rt->valor * in->valorForwarding;
+			printf("RESULTADO: %d\n", resultado);
+			strcpy(in->hazard,"");
+			return resultado;
+		}
+		else if(strcmp(in->hazard,"EX_HAZARD_B")==0)
+		{
+			//printf("%s\n", in->hazard );
+			printf("FW: %d\n",in->valorForwarding);
+			resultado = in->valorForwarding * rs->valor;
+			printf("RESULTADO: %d * %d = %d\n", in->valorForwarding, rs->valor, resultado);
+			strcpy(in->hazard,"");
+			return resultado;
+		}
+		resultado = rs->valor * rt->valor;
+		return resultado;
+	}
+	else if(strcmp(funct,"div")==0)
+	{
+		//rt = buscarRegistro(regSet, in->rt);
+		rs = buscarRegistro(regSet, in->rs);
+		rt = buscarRegistro(regSet, in->rt);
+		if(strcmp(in->hazard,"EX_HAZARD_A")==0)
+		{
+			resultado = rt->valor / in->valorForwarding;
+			strcpy(in->hazard,"");
+			return resultado;
+		}
+		else if(strcmp(in->hazard,"EX_HAZARD_B")==0)
+		{
+			resultado = in->valorForwarding / rs->valor;
+			strcpy(in->hazard,"");
+			return resultado;
+		}
+		resultado = rs->valor/rt->valor;
+		return resultado;
+	}
+	//CONTROL SIGNAL EX AND MEM 
+	else if(strcmp(funct,"sw")==0)
+	{
+		//rt = buscarRegistro(regSet, in->rt);
+		//rs = buscarRegistro(regSet, in->rs);
+		resultado = in->constante;
+		return resultado/4;
+	}
+	else if(strcmp(funct,"lw")==0)
+	{
+		//rt = buscarRegistro(regSet, in->rt);
+		//rs = buscarRegistro(regSet, in->rs);
+		resultado = in->constante;
+		return resultado/4;
+	}
+	else if(strcmp(funct,"j")==0)
+	{
+		//rt = buscarRegistro(regSet, in->rt);
+		//rs = buscarRegistro(regSet, in->rs);
+		resultado = buscarEtiqueta(in->etiqueta,programa);
+		printf("RESULTADO : %d\n",resultado);
+		//printf("VALOR: %d\n", resultado);
+		//printf("ETIQUETA: %d\n", resultado);
+		//printf("ETIQUETA: %s\n", in->etiqueta);
+		return resultado;
+	}
+	else if(strcmp(funct,"jal")==0)
+	{
+		//rt = buscarRegistro(regSet, in->rt);
+		//rs = buscarRegistro(regSet, in->rs);
+		ra = buscarRegistro(regSet, "$ra");
+		resultado = buscarEtiqueta(in->etiqueta,programa);
+		printf("RESULTADO : %d\n",resultado);
+		ra->valor = resultado;
+		//printf("VALOR: %d\n", resultado);
+		//printf("ETIQUETA: %d\n", resultado);
+		//printf("ETIQUETA: %s\n", in->etiqueta);
+		return resultado;
+	}
+	else if(strcmp(funct,"jr")==0)
+	{
+		rs = buscarRegistro(regSet, in->rs);
+		resultado = rs->valor + 1;
+		return resultado;
+	}
+	else if(strcmp(funct,"beq")==0)
+	{
+		rt = buscarRegistro(regSet, in->rt);
+		rs = buscarRegistro(regSet, in->rs);
+		if(rt->valor == rs->valor)
+		{
+			resultado = buscarEtiqueta(in->etiqueta,programa);
+			//printf("VALOR: %d\n", resultado);
+		}
+		else
+		{
+			resultado = -1;
+		}
+		return resultado;
+	}
+	else if(strcmp(funct,"bne")==0)
+	{
+		rt = buscarRegistro(regSet, in->rt);
+		rs = buscarRegistro(regSet, in->rs);
+		if(rt->valor != rs->valor)
+		{
+			resultado = buscarEtiqueta(in->etiqueta,programa);
+			//printf("VALOR: %d\n", resultado);
+		}
+		else
+		{
+			resultado = -1;
+		}
+		return resultado;
+	}
+	else if(strcmp(funct,"blt")==0)
+	{
+		rt = buscarRegistro(regSet, in->rt);
+		rs = buscarRegistro(regSet, in->rs);
+		if(rt->valor < rs->valor)
+		{
+			resultado = buscarEtiqueta(in->etiqueta,programa);
+			//printf("VALOR: %d\n", resultado);
+		}
+		else
+		{
+			resultado = -1;
+		}
+		return resultado;
+	}
+	else if(strcmp(funct,"bgt")==0)
+	{
+		rt = buscarRegistro(regSet, in->rt);
+		rs = buscarRegistro(regSet, in->rs);
+		if(rt->valor > rs->valor)
+		{
+			resultado = buscarEtiqueta(in->etiqueta,programa);
+			//printf("VALOR: %d\n", resultado);
+		}
+		else
+		{
+			resultado = -1;
+		}
+		return resultado;
+	}
+	return 0;
+}
+int aluForwarding(Instruccion* in,SetRegistros* regSet,Programa* programa){
+ 	Registro* rs = (Registro*)malloc(sizeof(Registro));
+	Registro* rt = (Registro*)malloc(sizeof(Registro));
+	Registro* ra = (Registro*)malloc(sizeof(Registro));
+ 	char* funct = (char*)malloc(sizeof(char)*8);
+	int constante;
+	int resultado;
+	strcpy(funct, in->op);
+ 	if(strcmp(funct,"addi")==0)
+	{
+		rs = buscarRegistro(regSet, in->rs);
+		constante = in->constante;
+		if(strcmp(in->hazard,"EX_HAZARD_A")==0)
+		{
+			resultado = in->valorForwarding + constante;
 			return resultado;
 		}
 		resultado = rs->valor + constante;
@@ -523,14 +764,18 @@ int alu(Instruccion* in,SetRegistros* regSet,Programa* programa){
 		rt = buscarRegistro(regSet, in->rt);
 		if(strcmp(in->hazard,"EX_HAZARD_A")==0)
 		{
-			printf("%s\n", in->hazard );
+			//printf("%s\n", in->hazard );
+			printf("FW: %d\n",in->valorForwarding);
 			resultado = rt->valor * in->valorForwarding;
+			printf("RESULTADO: %d\n", resultado);
 			return resultado;
 		}
 		else if(strcmp(in->hazard,"EX_HAZARD_B")==0)
 		{
-			printf("%s\n", in->hazard );
+			//printf("%s\n", in->hazard );
+			printf("FW: %d\n",in->valorForwarding);
 			resultado = in->valorForwarding * rs->valor;
+			printf("RESULTADO: %d * %d = %d\n", in->valorForwarding, rs->valor, resultado);
 			return resultado;
 		}
 		resultado = rs->valor * rt->valor;
@@ -741,10 +986,12 @@ char* instructionDecode(Instruccion* instruccion)
 //EXECUTE INSTRUCTION
 int executeInstruction(Instruccion* instruccion, SetRegistros* regSet,Programa* programa)
 {
-	int resultado;
+	int resultado = 0;
 	//printf("VALOR FORWARDING: %d\n", instruccion->valorForwarding);
 	resultado = alu(instruccion,regSet,programa);
+	printf("EX: %d\n", resultado);
 	instruccion->valor = resultado;
+	//strcpy(instruccion->hazard,"");
 	return resultado;
 }
 int executeInstruction2(Instruccion* instruccion, SetRegistros* regSet,Programa* programa)
@@ -759,32 +1006,26 @@ void forwarding(Instruccion** pipeline3,Instruccion* pipeline, SetRegistros* reg
 	int resultado = 0;
 	if(strcmp(riesgo->nombre,"EX_HAZARD_A")==0 || strcmp(riesgo->nombre,"EX_HAZARD_B")==0)
 	{
-		resultado = alu(&pipeline[1],regSet,programa);
-		//printf("%d\n", resultado);
-		//printf("%s\n","FORWARDING" );
-		//printf("%s %s %s\n",pipeline[0]->op, pipeline[0]->rd, pipeline[0]->rs);
+		resultado = aluForwarding(&pipeline[1],regSet,programa);
+		printf("FWR: %d\n", resultado);
 		pipeline[0].valorForwarding = resultado;
-		//pipeline2[0].valorForwarding = resultado;
+		//pipeline[1].valor = resultado;
 		strcpy(pipeline[0].hazard,riesgo->nombre);
-		//return resultado;
 	}
 	else if(strcmp(riesgo->nombre,"MEM_HAZARD_A")==0 || strcmp(riesgo->nombre,"MEM_HAZARD_B")==0)
 	{
-		resultado = alu(&pipeline[1],regSet,programa);
+		resultado = aluForwarding(&pipeline[1],regSet,programa);
 		pipeline[0].valorForwarding = resultado;
 		strcpy(pipeline[0].hazard,riesgo->nombre);
-		//return resultado;
+
 	}
 	else if(strcmp(riesgo->nombre,"LOAD_HAZARD_A")==0 || strcmp(riesgo->nombre,"LOAD_HAZARD_B")==0)
 	{
-		resultado = alu(&pipeline[1],regSet,programa);
+		resultado = aluForwarding(&pipeline[1],regSet,programa);
 		pipeline[0].valorForwarding = resultado;
 		strcpy(pipeline[0].hazard,riesgo->nombre);
-		//return resultado;
 	}
-	//resultado = alu(instruccion,regSet,programa);
-	//instruccion->valor = resultado;
-	//return resultado;
+
 }
 //MEM
 int memoryAccess(Instruccion* in,SetRegistros* regSet)
@@ -824,12 +1065,13 @@ void writeBack(Instruccion* instruccion, SetRegistros* regSet)
 	if(strcmp(tipo,"AI")==0)
 	{
 		rd = buscarRegistro(regSet, instruccion->rd);
-		//printf("VARLO DE LA INSTRUCCION %d\n", instruccion->valor);
+		printf("VALOR DE LA INSTRUCCION %d\n", instruccion->valor);
 		rd->valor = instruccion->valor;
 	}
 	else if(strcmp(tipo,"AR")==0)
 	{
 		rd = buscarRegistro(regSet, instruccion->rd);
+		printf("VALOR DE LA INSTRUCCION %d\n", instruccion->valor);
 		rd->valor = instruccion->valor;
 	}
 	else if(strcmp(tipo,"load")==0)
