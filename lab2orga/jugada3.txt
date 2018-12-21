@@ -1,4 +1,19 @@
 addi $s1, $s6, 100
-addi $s4, $s1, 100
-addi $t0, $s4, 100
-addi $s3, $s5, 100
+#addi $s4, $s1, 100
+#addi $t0, $s4, 100
+#addi $s3, $s5, 100
+subi $s3, $s5, 100
+addiu $s3, $s5, 100
+add $s3, $s5, $s1
+sub $s3, $s5, $s1
+lw $s1, 8($sp)
+sw $s2, 4($sp)
+mul $s3, $s5, $s1
+div $s3, $s7, $s2
+jal AAA
+jr $ra
+j BBB
+bne $s1, $s0, ETQ1
+beq $s1, $s0, ETQ2
+blt $s1, $s0, ETQ3
+bgt $s1, $s0, ETQ4

@@ -1,0 +1,9 @@
+addi $s1, $zero, 13
+addi $s2, $zero, 13
+addi $s4, $s1, 10
+addi $t0, $s4, 10
+addi $s3, $s5, 10
+jal etiqueta
+addi $s3, $s5, 10
+etiqueta:
+subi $s1, $zero, 10
