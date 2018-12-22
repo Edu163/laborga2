@@ -2,17 +2,21 @@
 
 int main()
 {
-	SetRegistros* regSet = (SetRegistros*)malloc(sizeof(SetRegistros));
-	regSet = inicializarRegistros();
-	//imprimirRegistros(regSet);
-	//SetInstrucciones* inSet = (SetInstrucciones*)malloc(sizeof(SetInstrucciones));
-	//Programa* programa = (Programa*)malloc(sizeof(Programa));
-	//programa = cargarPrograma("jugada1.txt");
-	//inSet = cargarProgramaAMemoria(programa);
-	//imprimirInstrucciones2(inSet);
-	//Registro* reg = (Registro*)malloc(sizeof(Registro));
-	//reg = crearRegistro("$t1",0);
-	pipeline();
-	//insertarRegistro(regSet,reg,0);
+	char* pathFile = (char*)malloc(sizeof(char)*256);
+	char* finalPathFile = (char*)malloc(sizeof(char)*256);
+	Programa* programa = (Programa*)malloc(sizeof(Programa));
+	printf("%s\n","Ingrese la ruta de directorio del archivo, EJ: jugada.txt");
+	fgets(pathFile,256,stdin);
+	int a = strlen(pathFile);
+	strncpy(finalPathFile,pathFile,a-1);
+	programa = cargarPrograma(finalPathFile);
+	if(programa != NULL)
+	{
+		pipeline(programa);
+	}
+	else
+	{
+		printf("%s\n","La ruta del archivo no es valida");
+	}
 	return 0;
 }

@@ -99,7 +99,7 @@ void concatChar(char* str, char c);
 void avanzarInstrucciones(Instruccion* pipeline,Instruccion* instruccion);
 void avanzarBuffer(Buffer* buffer, int valor);
 
-void pipeline();
+void pipeline(Programa* programa);
 void printEtapasPL(Instruccion* pipeline);
 int pipelineVacio(Instruccion* pipeline);
 void ponerInstruccionNopJump(Instruccion* pipeline);
@@ -131,5 +131,8 @@ int executeInstruction(Instruccion* instruccion, SetRegistros* regSet,Programa* 
 void writeBack(Instruccion* instruccion, SetRegistros* regSet);
 int memoryAccess(Instruccion* instruccion,SetRegistros* regSet);
 
+//IMPRESION
+void imprimirRiesgosArchivo(SetRiesgos* riesgos);
+void imprimirRiesgoArchivo(Riesgo* riesgo, FILE* f);
 #endif
 
