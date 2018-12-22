@@ -147,15 +147,15 @@ void pipeline(Programa* programa)
 	imprimirRiesgosArchivo(riesgos);
 	imprimirSoluciones(riesgos);
 	imprimirRegistros(regSet);
-	imprimirStack();
 
 }
 //FUNCION PARA IMPRIMIR LOS VALORES DEL STACK POINTER
-void imprimirStack()
+void imprimirStack(FILE* f)
 {
+	fprintf(f,"%s ", "$sp");
 	for(int i = 0; i < 10 ; i++)
 	{
-		printf("%d ", stackPointer[i]);
+		fprintf(f,"%d ", stackPointer[i]);
 		
 	}
 	printf("\n");
@@ -1283,7 +1283,7 @@ void imprimirRiesgoArchivo(Riesgo* riesgo, FILE* f)
 void imprimirRiesgosArchivo(SetRiesgos* riesgos)
 {
 	FILE* f;
-	f = fopen("HAZARDS.txt","ab");
+	f = fopen("HAZARDS.txt","wb");
 	Riesgo* riesgo = (Riesgo*)malloc(sizeof(Riesgo));
 	for(int i = 0; i < riesgos->largo; i++)
 	{
@@ -1295,35 +1295,37 @@ void imprimirRiesgosArchivo(SetRiesgos* riesgos)
 }
 void imprimirSoluciones(SetRiesgos* riesgos)
 {
+	FILE* f;
+	f = fopen("DETECCION.txt","wb");
 	Riesgo* riesgo = (Riesgo*)malloc(sizeof(Riesgo));
 	for(int i = 0; i < riesgos->largo; i++)
 	{
 		riesgo = obtenerRiesgo(riesgos,i);
-		printf("%d - ", i+1);
-		imprimirSolucion(riesgo);
+		fprintf(f,"%d - ", i+1);
+		imprimirSolucion(riesgo,f);
 	}
 }
-void imprimirSolucion(Riesgo* riesgo)
+void imprimirSolucion(Riesgo* riesgo,FILE* f)
 {
 	if(strcmp(riesgo->nombre,"LOAD_HAZARD_A") == 0 || strcmp(riesgo->nombre,"LOAD_HAZARD_B") == 0)
 	{
-		printf("%s\n","Solucionable a traves de: NOP y Forwarding MEM/WB a ID/EX");
+		fprintf(f,"%s\n","Solucionable a traves de: NOP y Forwarding MEM/WB a ID/EX");
 	}
 	else if(strcmp(riesgo->nombre,"EX_HAZARD_A") == 0 || strcmp(riesgo->nombre,"EX_HAZARD_B") == 0)
 	{
-		printf("%s\n","Solucionable a traves de: Forwarding EX/MEM a ID/EX");
+		fprintf(f,"%s\n","Solucionable a traves de: Forwarding EX/MEM a ID/EX");
 	}
 	else if(strcmp(riesgo->nombre,"MEM_HAZARD_A") == 0 || strcmp(riesgo->nombre,"MEM_HAZARD_B") == 0)
 	{
-		printf("%s\n","Solucionable a traves de: Forwarding MEM/WB a ID/EX");
+		fprintf(f,"%s\n","Solucionable a traves de: Forwarding MEM/WB a ID/EX");
 	}
 	else if(strcmp(riesgo->nombre,"JUMP") == 0)
 	{
-		printf("%s\n","Solucionable a traves de: FLUSH/NOP en IF/ID");
+		fprintf(f,"%s\n","Solucionable a traves de: FLUSH/NOP en IF/ID");
 	}
 	else if(strcmp(riesgo->nombre,"BRANCH") == 0)
 	{
-		printf("%s\n","Solucionable a traves de: FLUSH/NOP en IF/ID, ID/EX y EX/MEM");
+		fprintf(f,"%s\n","Solucionable a traves de: FLUSH/NOP en IF/ID, ID/EX y EX/MEM");
 	}
 }
 //Funcion para insertar un riesgo en una lista de riesgos
@@ -1558,13 +1560,19 @@ SetRegistros* inicializarRegistros()
 //IMPRIME LOS REGISTROS
 void imprimirRegistros(SetRegistros* registers)
 {	
+	FILE* f;
+	f = fopen("REGISTROS.txt","wb");
 	Registro* rg = (Registro*)malloc(sizeof(Registro));
 	for(int i = 0; i < 29; i++)
 	{
 		rg = obtenerRegistro(i,registers);
-		printf("%s ",rg->nombre );
-		printf("%d\n",rg->valor );
+		if(strcmp(rg->nombre,"")!=0)
+		{
+			fprintf(f,"%s ",rg->nombre );
+			fprintf(f,"%d\n",rg->valor );
+		}
 	}
+	imprimirStack(f);
 }
 //----------------------------------------------------------------
 //----------------------------------------------------------------

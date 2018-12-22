@@ -70,7 +70,7 @@ typedef struct SetRiesgos{
 	//int indice;
 }SetRiesgos;
 
-void imprimirStack();
+
 
 void insertarInstruccion2(SetInstrucciones* inSet,char** linea);
 void insertarInstruccion(SetInstrucciones* inSet,Instruccion* in);
@@ -122,8 +122,7 @@ void imprimirRiesgo(Riesgo* riesgo);
 void insertarRiesgo(SetRiesgos* riesgos, Riesgo* riesgo);
 Riesgo* obtenerRiesgo(SetRiesgos* riesgos,int n);
 void imprimirRiesgos(SetRiesgos* riesgos);
-void imprimirSoluciones(SetRiesgos* riesgos);
-void imprimirSolucion(Riesgo* riesgo);
+
 //ETAPAS
 Instruccion* instructionFetch(SetInstrucciones* memoria, int* direccionPC);
 char* instructionDecode(Instruccion* instruccion);
@@ -134,5 +133,8 @@ int memoryAccess(Instruccion* instruccion,SetRegistros* regSet);
 //IMPRESION
 void imprimirRiesgosArchivo(SetRiesgos* riesgos);
 void imprimirRiesgoArchivo(Riesgo* riesgo, FILE* f);
+void imprimirSoluciones(SetRiesgos* riesgos);
+void imprimirSolucion(Riesgo* riesgo,FILE* f);
+void imprimirStack(FILE* f);
 #endif
 

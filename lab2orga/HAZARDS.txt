@@ -1,24 +1,12 @@
-1 - EX_HAZARD_A Hazard de datos instruccion:  3 CC:  4 
-2 - EX_HAZARD_B Hazard de datos instruccion:  7 CC:  8 
-3 - EX_HAZARD_B Hazard de datos instruccion:  9 CC:  10 
-4 - JUMP Hazard de control instruccion:  10 CC:  11 
-5 - EX_HAZARD_B Hazard de datos instruccion:  9 CC:  15 
-6 - JUMP Hazard de control instruccion:  10 CC:  16 
-7 - EX_HAZARD_B Hazard de datos instruccion:  9 CC:  20 
-8 - JUMP Hazard de control instruccion:  10 CC:  21 
-9 - EX_HAZARD_B Hazard de datos instruccion:  9 CC:  25 
-10 - JUMP Hazard de control instruccion:  10 CC:  26 
-11 - EX_HAZARD_B Hazard de datos instruccion:  9 CC:  30 
-12 - JUMP Hazard de control instruccion:  10 CC:  31 
-1 - EX_HAZARD_A Hazard de datos instruccion:  3 CC:  4 
-2 - EX_HAZARD_B Hazard de datos instruccion:  7 CC:  8 
-3 - EX_HAZARD_B Hazard de datos instruccion:  9 CC:  10 
-4 - JUMP Hazard de control instruccion:  10 CC:  11 
-5 - EX_HAZARD_B Hazard de datos instruccion:  9 CC:  15 
-6 - JUMP Hazard de control instruccion:  10 CC:  16 
-7 - EX_HAZARD_B Hazard de datos instruccion:  9 CC:  20 
-8 - JUMP Hazard de control instruccion:  10 CC:  21 
-9 - EX_HAZARD_B Hazard de datos instruccion:  9 CC:  25 
-10 - JUMP Hazard de control instruccion:  10 CC:  26 
-11 - EX_HAZARD_B Hazard de datos instruccion:  9 CC:  30 
-12 - JUMP Hazard de control instruccion:  10 CC:  31 
+1 - Hazard de datos instruccion:  3 CC:  4 
+2 - Hazard de datos instruccion:  7 CC:  8 
+3 - Hazard de datos instruccion:  9 CC:  10 
+4 - Hazard de control instruccion:  10 CC:  11 
+5 - Hazard de datos instruccion:  9 CC:  15 
+6 - Hazard de control instruccion:  10 CC:  16 
+7 - Hazard de datos instruccion:  9 CC:  20 
+8 - Hazard de control instruccion:  10 CC:  21 
+9 - Hazard de datos instruccion:  9 CC:  25 
+10 - Hazard de control instruccion:  10 CC:  26 
+11 - Hazard de datos instruccion:  9 CC:  30 
+12 - Hazard de control instruccion:  10 CC:  31 
