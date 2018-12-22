@@ -13,6 +13,7 @@ int main()
 	if(programa != NULL)
 	{
 		pipeline(programa);
+		printf("%s\n","Se han generado los siguientes archivos: HAZARDS.txt, SOLUCION.txt, REGISTROS.txt" );
 	}
 	else
 	{

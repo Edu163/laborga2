@@ -1,0 +1,23 @@
+codigo_impresion.txt
+//IMPRIMIR
+		//----------------------------------------------------
+		//----------------------------------------------------
+		if(ciclosReloj<10)
+		{
+			printf("%d)  ",ciclosReloj);
+			printf("%d)  ",*direccion);
+		}
+		if(ciclosReloj>=10)
+		{
+			printf("%d) ",ciclosReloj);
+			printf("%d)  ",*direccion);
+		}
+		printf("  %s |", funct);
+		printf("%  d |",resultado);
+		imprimirUnaInstruccion(instruccion);
+		printf(" ");
+		printEtapasPL(pipeline);
+		printf("\n");
+		//----------------------------------------------------
+		//----------------------------------------------------
+		//FIN DE LA IMPRESION

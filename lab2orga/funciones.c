@@ -57,7 +57,6 @@ void pipeline(Programa* programa)
 	int resultado = 0;
 	int jumpDireccion = 0;
 	int branchDireccion = 0;
-	printf("%s\n","                    IF                 ID                EX                MM                WB" );
 	while(pipelineVacio(pipeline) != 1|| *direccion<inSet->largo)
 	{	
 		//----------------------------------------------------
@@ -78,7 +77,7 @@ void pipeline(Programa* programa)
 				flush(pipeline);
 				instruccion = instructionFetch(inSet,direccion);
 			}
-			else if(strcmp(riesgoLoad->nombre,"LOAD_HAZARD")==0)
+			else if(strcmp(riesgoLoad->nombre,"LOAD_HAZARD_A")==0 || strcmp(riesgoLoad->nombre,"LOAD_HAZARD_B")==0)
 			{
 
 				ponerInstruccionNopJump(pipeline);
@@ -93,7 +92,7 @@ void pipeline(Programa* programa)
 				instruccion = instructionFetch(inSet,direccion);
 			}
 		}
-		else if(strcmp(riesgoLoad->nombre,"LOAD_HAZARD")==0)
+		else if(strcmp(riesgoLoad->nombre,"LOAD_HAZARD_A")==0 || strcmp(riesgoLoad->nombre,"LOAD_HAZARD_B")==0)
 		{
 
 			ponerInstruccionNopJump(pipeline);
@@ -116,29 +115,6 @@ void pipeline(Programa* programa)
 		writeBack(&pipeline[3], regSet);
 		resultado = executeInstruction(&pipeline[1],regSet,programa);
 		memoryAccess(&pipeline[2],regSet);
-		
-		//IMPRIMIR
-		//----------------------------------------------------
-		//----------------------------------------------------
-		if(ciclosReloj<10)
-		{
-			printf("%d)  ",ciclosReloj);
-			printf("%d)  ",*direccion);
-		}
-		if(ciclosReloj>=10)
-		{
-			printf("%d) ",ciclosReloj);
-			printf("%d)  ",*direccion);
-		}
-		printf("  %s |", funct);
-		printf("%  d |",resultado);
-		imprimirUnaInstruccion(instruccion);
-		printf(" ");
-		printEtapasPL(pipeline);
-		printf("\n");
-		//----------------------------------------------------
-		//----------------------------------------------------
-		//FIN DE LA IMPRESION
 		*direccion = *direccion + 1;
 		ciclosReloj++;
 		//SALTOS DEL PIPELINE
@@ -563,14 +539,12 @@ int alu(Instruccion* in,SetRegistros* regSet,Programa* programa){
 	else if(strcmp(funct,"j")==0)
 	{
 		resultado = buscarEtiqueta(in->etiqueta,programa);
-		printf("RESULTADO : %d\n",resultado);
 		return resultado;
 	}
 	else if(strcmp(funct,"jal")==0)
 	{
 		ra = buscarRegistro(regSet, "$ra");
 		resultado = buscarEtiqueta(in->etiqueta,programa);
-		printf("RESULTADO : %d\n",resultado);
 		ra->valor = resultado;
 		return resultado;
 	}
@@ -731,18 +705,12 @@ int aluForwarding(Instruccion* in,SetRegistros* regSet,Programa* programa){
 		rt = buscarRegistro(regSet, in->rt);
 		if(strcmp(in->hazard,"EX_HAZARD_A")==0)
 		{
-			
-			printf("FW: %d\n",in->valorForwarding);
 			resultado = rt->valor * in->valorForwarding;
-			printf("RESULTADO: %d\n", resultado);
 			return resultado;
 		}
 		else if(strcmp(in->hazard,"EX_HAZARD_B")==0)
 		{
-			
-			printf("FW: %d\n",in->valorForwarding);
 			resultado = in->valorForwarding * rs->valor;
-			printf("RESULTADO: %d * %d = %d\n", in->valorForwarding, rs->valor, resultado);
 			return resultado;
 		}
 		resultado = rs->valor * rt->valor;
@@ -783,7 +751,6 @@ int aluForwarding(Instruccion* in,SetRegistros* regSet,Programa* programa){
 	{
 
 		resultado = buscarEtiqueta(in->etiqueta,programa);
-		printf("RESULTADO : %d\n",resultado);
 
 		return resultado;
 	}
@@ -792,7 +759,6 @@ int aluForwarding(Instruccion* in,SetRegistros* regSet,Programa* programa){
 
 		ra = buscarRegistro(regSet, "$ra");
 		resultado = buscarEtiqueta(in->etiqueta,programa);
-		printf("RESULTADO : %d\n",resultado);
 		ra->valor = resultado;
 
 		return resultado;
@@ -945,13 +911,6 @@ int executeInstruction(Instruccion* instruccion, SetRegistros* regSet,Programa* 
 	instruccion->valor = resultado;
 	return resultado;
 }
-int executeInstruction2(Instruccion* instruccion, SetRegistros* regSet,Programa* programa)
-{
-	int resultado;
-	resultado = alu(instruccion,regSet,programa);
-	instruccion->valor = resultado;
-	return resultado;
-}
 //Funcion encargada de realizar un forwarding de ser necesario
 //ENTRADA: pipeline: Arreglo de instrucciones, regSet: set de registros a usar
 //programa: Necesario para saber a que linea saltar en caso de un jump o branch, riesgo: para conocer si hay riesgos de datos.
@@ -1017,13 +976,11 @@ void writeBack(Instruccion* instruccion, SetRegistros* regSet)
 	if(strcmp(tipo,"AI")==0)
 	{
 		rd = buscarRegistro(regSet, instruccion->rd);
-		printf("VALOR DE LA INSTRUCCION %d\n", instruccion->valor);
 		rd->valor = instruccion->valor;
 	}
 	else if(strcmp(tipo,"AR")==0)
 	{
 		rd = buscarRegistro(regSet, instruccion->rd);
-		printf("VALOR DE LA INSTRUCCION %d\n", instruccion->valor);
 		rd->valor = instruccion->valor;
 	}
 	else if(strcmp(tipo,"load")==0)
@@ -1130,7 +1087,7 @@ Riesgo* unidadDeteccionRiesgos(Instruccion* fetch, SetRiesgos* riesgos,SetRegist
 		//printf("%s\n",riesgo->nombre );
 		if(strcmp(riesgo->nombre,"")!=0)
 		{
-			riesgo->ciclo = CC;
+			riesgo->ciclo = CC + 1;
 			riesgo->linea = fetch->posicion;
 			//riesgo->linea = pipeline[0].posicion;
 
@@ -1599,7 +1556,7 @@ Programa* cargarPrograma(char* pathFile){
 		int lineCounter = 0;
 		while (fgets(line, 200, instructionFile) != NULL)
 		{
-			if(line[0] != '#')
+			if(line[0] != '#' && strcmp(line,"")!=0)
 			{
 				lineCounter++;
 			}
@@ -1617,7 +1574,7 @@ Programa* cargarPrograma(char* pathFile){
 		int a = 0;
 		while (fgets(line, 200, instructionFile) != NULL)
 		{	
-			if(line[0] != '#')
+			if(line[0] != '#' && strcmp(line,"")!=0)
 			{
 				strcpy(instruction->matrizInstrucciones[a],line);
 				a++;
