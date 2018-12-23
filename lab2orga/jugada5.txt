@@ -1,9 +1,17 @@
-addi $s1, $zero, 13
-addi $s2, $zero, 13
-addi $s4, $s1, 10
-addi $t0, $s4, 10
-addi $s3, $s5, 10
-jal etiqueta
-addi $s3, $s5, 10
-etiqueta:
-subi $s1, $zero, 10
+addi $t0, $t0, 100
+addi $sp, $sp, -64
+j iter
+sw $sp, 0($sp)
+
+iter:
+beq $t0, $zero, exit
+sw $t0, 0($sp)
+lw $t1, 0($sp)
+add $t1, $t1, $t0
+subi $t0, $t0, 50
+addi $sp, $sp, 4
+j iter
+
+exit:
+addiu $s0, $t0, 1
+add $v0, $s0, $t1

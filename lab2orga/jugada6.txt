@@ -1,5 +1,14 @@
 addi $s0, $zero, 10
 addi $s1, $zero, 10
 addi $s2, $zero, 5
-mul $s3, $s2, $s0
-mul $s1, $s3, $s0
+jal etiqueta
+addi $s3, $zero, 10
+addi $s4, $zero, 10
+addi $s5, $zero, 5
+j exit
+etiqueta:
+addi $t1, $zero, 10
+addi $t2, $zero, 10
+addi $t3, $zero, 5
+jr $ra
+exit:

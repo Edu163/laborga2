@@ -1,14 +1,9 @@
-addi $s0, $zero, -10
-addi $sp, $sp, -4
-sw $s0, 0($sp)
-lw $s1, 0($sp)
-addi $t0, $zero, 5
-addi $t1, $zero, 1
-iter:
-mul $t1, $t1, $t0
-subi $t0, $t0, 1
-beq $t0, $zero, exit
-j iter
-exit:
-sw $t1, 0($sp)
-addi $sp, $sp, 4
+addi $s1, $zero, 6
+addi $s2, $zero, 5
+beq $s1, $s2, etiqueta
+addi $s5, $zero, 20
+addi $s6, $zero, 20
+etiqueta:
+addi $t1, $zero, 20
+addi $t2, $zero, 20
+

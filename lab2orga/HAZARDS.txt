@@ -1,8 +1,1 @@
-1 - Hazard de control instruccion:  3 CC:  4 
-2 - Hazard de datos instruccion:  8 CC:  9 
-3 - Hazard de control instruccion:  11 CC:  13 
-4 - Hazard de datos instruccion:  8 CC:  18 
-5 - Hazard de control instruccion:  11 CC:  22 
-6 - Hazard de control instruccion:  5 CC:  26 
-7 - Hazard de datos instruccion:  8 CC:  27 
-8 - Hazard de datos instruccion:  13 CC:  29 
+1 - Hazard de datos instruccion:  3 CC:  4 

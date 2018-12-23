@@ -1,8 +1,1 @@
-1 - Solucionable a traves de: FLUSH/NOP en IF/ID
-2 - Solucionable a traves de: NOP y Forwarding MEM/WB a ID/EX
-3 - Solucionable a traves de: FLUSH/NOP en IF/ID
-4 - Solucionable a traves de: NOP y Forwarding MEM/WB a ID/EX
-5 - Solucionable a traves de: FLUSH/NOP en IF/ID
-6 - Solucionable a traves de: FLUSH/NOP en IF/ID, ID/EX y EX/MEM
-7 - Solucionable a traves de: NOP y Forwarding MEM/WB a ID/EX
-8 - Solucionable a traves de: Forwarding EX/MEM a ID/EX
+1 - Solucionable a traves de: Forwarding EX/MEM a ID/EX

@@ -115,6 +115,22 @@ void pipeline(Programa* programa)
 		writeBack(&pipeline[3], regSet);
 		resultado = executeInstruction(&pipeline[1],regSet,programa);
 		memoryAccess(&pipeline[2],regSet);
+		if(ciclosReloj<10)
+		{
+			printf("%d)  ",ciclosReloj);
+			printf("%d)  ",*direccion);
+		}
+		if(ciclosReloj>=10)
+		{
+			printf("%d) ",ciclosReloj);
+			printf("%d)  ",*direccion);
+		}
+		printf("  %s |", funct);
+		printf("%  d |",resultado);
+		imprimirUnaInstruccion(instruccion);
+		printf(" ");
+		printEtapasPL(pipeline);
+		printf("\n");
 		*direccion = *direccion + 1;
 		ciclosReloj++;
 		//SALTOS DEL PIPELINE
